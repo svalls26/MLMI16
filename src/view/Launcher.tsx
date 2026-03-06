@@ -9,7 +9,7 @@ export default function Launcher(props: { children: React.ReactNode, leftSide?: 
 
   return <div className="short-pulse" style={{ display: 'flex', flexDirection: 'column', height: '100vh', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
     <GithubCorner href="https://github.com/m-damien/DirectGPT"/>
-    <h1>Run the study</h1>
+    <h1>FactCheck Study</h1>
     <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 40 }}>
       <h2>Participant ID: </h2>
       <select id="participantIdSelectBox" style={{ width: 200, height: 50, borderRadius: 5, fontSize: 20, fontWeight: 'bold' }}>
