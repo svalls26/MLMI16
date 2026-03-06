@@ -1,9 +1,8 @@
 import React from "react";
 import ChatInterface from "../ChatInterface";
 import DirectInterface from "../DirectInterface";
-import CodeEntity from "../entities/CodeEntity";
-import SVGEntity from "../entities/SVGEntity";
 import TextualEntity from "../entities/TextualEntity";
+import CognitiveEffortQuestionnaire from "./CognitiveEffortQuestionnaire";
 import StudyMessage from "./StudyMessage";
 import { useStudyModelStore } from "./StudyModel";
 import { StudyCondition, StudyStep, StudyTaskGenerator } from "./StudyTaskGenerator";
@@ -27,18 +26,16 @@ export default function StudyInterface() {
 
   // Use URL parameters to generate the steps
   const hashSplitted = window.location.hash.split("?");
-  const search = hashSplitted[hashSplitted.length-1]
+  const search = hashSplitted[hashSplitted.length - 1];
   const params = new URLSearchParams(search);
   const pid = params.get('pid');
   const pstepId = params.get('stepId');
   const dataSaved = params.get('dataSaved');
 
-
   setIsDataSaved(dataSaved === "true");
   if (participantId === -1 && pid) {
-    setParticipantId(participantId = parseInt(pid))
-    setSteps(StudyTaskGenerator.generateSteps(participantId))
-    // In case of failure, we allow jumping to a specific step directly
+    setParticipantId(participantId = parseInt(pid));
+    setSteps(StudyTaskGenerator.generateSteps(participantId));
     if (pstepId) {
       setStepId(stepId = parseInt(pstepId));
     } else {
@@ -47,7 +44,7 @@ export default function StudyInterface() {
   }
 
   if (participantId < 0) {
-    return <StudyMessage message="Error: Make sure the URL is correct." />
+    return <StudyMessage message="Error: Make sure the URL is correct." />;
   }
 
   let currentStep: StudyStep | null = null;
@@ -56,38 +53,47 @@ export default function StudyInterface() {
   }
 
   if (currentStep) {
-
     if (currentStep.type === 'message') {
-      return <StudyMessage message={currentStep.message || ""} />
+      return <StudyMessage message={currentStep.message || ""} />;
+
     } else if (currentStep.type === 'video') {
-      return <StudyVideo video={currentStep.video || ""} />
+      return <StudyVideo video={currentStep.video || ""} />;
+
+    } else if (currentStep.type === 'questionnaire') {
+      const order = currentStep.questionnaireInterfaceOrder || ['direct', 'chat'];
+      return <CognitiveEffortQuestionnaire interfaceOrder={order} />;
+
     } else if (currentStep.type === 'condition') {
       const condition = currentStep.condition as StudyCondition;
-      
-      let currentInterface = <></>;
+      const currentTask = condition.tasks[taskId];
+
+      let currentInterface: React.ReactNode;
 
       if (currentStep.isDirect) {
-        let entity = <></>
-        if (condition.type === 'svg') {
-          entity = <SVGEntity/>
-        } else if (condition.type === 'text') {
-          entity = <TextualEntity/>
-        } else if (condition.type === 'code') {
-          entity = <CodeEntity/>
-        }
-        currentInterface = <DirectInterface leftSide={<TaskPanel task={condition.tasks[taskId]}/>}>{entity}</DirectInterface>
+        currentInterface = (
+          <DirectInterface leftSide={<TaskPanel task={currentTask} />}>
+            <TextualEntity />
+          </DirectInterface>
+        );
       } else {
-        currentInterface = <ChatInterface leftSide={<TaskPanel task={condition.tasks[taskId]}/>}></ChatInterface>
+        currentInterface = (
+          <ChatInterface leftSide={<TaskPanel task={currentTask} />} />
+        );
       }
 
-      // Render the current step
-      return <>{currentInterface}
-      <div style={{position: 'absolute', bottom: 10, left: 10, zIndex: 999, color: 'gray'}}><button onClick={() => {logEvent("USER_PRESSED_RESET"); startFresh()}}>Reset</button></div>
-      <div style={{position: 'absolute', bottom: 10, right: 10, zIndex: 999, color: 'gray', pointerEvents: 'none'}}>{getTaskCode()}</div>
-      </>;
+      return (
+        <>
+          {currentInterface}
+          <div style={{ position: 'absolute', bottom: 10, left: 10, zIndex: 999, color: 'gray' }}>
+            <button onClick={() => { logEvent("USER_PRESSED_RESET"); startFresh(); }}>Reset</button>
+          </div>
+          <div style={{ position: 'absolute', bottom: 10, right: 10, zIndex: 999, color: 'gray', pointerEvents: 'none' }}>
+            {getTaskCode()}
+          </div>
+        </>
+      );
     }
   }
 
-  return <StudyMessage message="Study is loading..." />
+  return <StudyMessage message="Study is loading..." />;
 }
-
