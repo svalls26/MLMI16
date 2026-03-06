@@ -18,13 +18,15 @@ export interface StudyCondition {
 }
 
 export interface StudyStep {
-  type: 'condition' | 'message' | 'video' | 'questionnaire';
+  type: 'condition' | 'message' | 'video' | 'questionnaire' | 'warmup';
   video?: string;
   message?: string;
   condition?: StudyCondition;
   isDirect?: boolean;
   saveData?: boolean;
   questionnaireInterfaceOrder?: ['direct' | 'chat', 'direct' | 'chat'];
+  warmupImage?: string;
+  warmupDurationSeconds?: number;
 }
 
 // ─── Source documents and hallucinated summaries ─────────────────────────────
@@ -227,13 +229,11 @@ export class StudyTaskGenerator {
         'By clicking Next you confirm that you have read the information sheet and consent to participate.',
     });
 
-    // Stage 2 — Think-Aloud Practice and Familiarisation
+    // Stage 2 — Think-Aloud Practice with image warm-up
     steps.push({
-      type: 'message',
-      message:
-        '<b>Stage 2 — Think-Aloud Practice</b><br><br>' +
-        'Please think aloud throughout each task — verbalise everything you notice and every correction you intend to make.<br><br>' +
-        'Take 30 seconds to practise: describe what you see in the room around you out loud now, before clicking Next.',
+      type: 'warmup',
+      warmupImage: (process.env.PUBLIC_URL || '') + '/study/warmup.jpg',
+      warmupDurationSeconds: 90,
     });
 
     // Block 1

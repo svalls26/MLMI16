@@ -29,7 +29,7 @@ export default function Launcher(props: { children: React.ReactNode, leftSide?: 
       <button style={{ width: 200, height: 50, borderRadius: 5, fontSize: 20, fontWeight: 'bold' }} onClick={() => {
         resetModel();
         resetStudyModel();
-        window.location.hash = '/study' + '?pid=' + (document.getElementById("participantIdSelectBox") as HTMLSelectElement).value;
+        window.location.hash = '/study' + '?pid=' + (document.getElementById("participantIdSelectBox") as HTMLSelectElement).value + '&dataSaved=true';
       }}>Start</button>
     </div>
   </div>

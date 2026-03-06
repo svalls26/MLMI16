@@ -7,6 +7,7 @@ import StudyMessage from "./StudyMessage";
 import { useStudyModelStore } from "./StudyModel";
 import { StudyCondition, StudyStep, StudyTaskGenerator } from "./StudyTaskGenerator";
 import StudyVideo from "./StudyVideo";
+import StudyWarmup from "./StudyWarmup";
 import TaskPanel from "./TaskPanel";
 
 export default function StudyInterface() {
@@ -55,6 +56,12 @@ export default function StudyInterface() {
   if (currentStep) {
     if (currentStep.type === 'message') {
       return <StudyMessage message={currentStep.message || ""} />;
+
+    } else if (currentStep.type === 'warmup') {
+      return <StudyWarmup
+        image={currentStep.warmupImage || ''}
+        durationSeconds={currentStep.warmupDurationSeconds || 90}
+      />;
 
     } else if (currentStep.type === 'video') {
       return <StudyVideo video={currentStep.video || ""} />;
