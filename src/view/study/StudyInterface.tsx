@@ -39,6 +39,12 @@ export default function StudyInterface() {
   const pstepId = params.get('stepId');
   const dataSaved = params.get('dataSaved');
 
+  // If not launched from the Launcher (dataSaved param absent), redirect there
+  if (dataSaved !== "true") {
+    window.location.hash = '/';
+    return null;
+  }
+
   setIsDataSaved(dataSaved === "true");
   if (participantId === -1 && pid) {
     setParticipantId(participantId = parseInt(pid));
