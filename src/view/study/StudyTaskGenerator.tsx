@@ -35,15 +35,11 @@ const TASK_A: StudyTask = {
   timeLimitMinutes: 3,
   expectedHallucinations: 3,
   sourceDocument:
-`The Norman door problem is named after cognitive scientist Don Norman, who described the phenomenon in his 1988 book "The Design of Everyday Things." A Norman door is any door whose design misleads users about how to operate it — for example, a door with a handle that implies pulling when it actually requires pushing, or vice versa. Such design failures arise when visual affordances (features that signal possible actions) and signifiers (perceptible cues that communicate where and how to act) contradict the door's actual mechanism.
-
-Norman argued that a well-designed door should make the correct action immediately obvious without relying on labels such as "Push" or "Pull." Flat push plates should indicate pushing, while D-shaped or bar handles should indicate pulling. When these signals are absent or contradictory, users experience confusion and resort to trial and error — a moment colloquially called the "door dance."
+`The Norman door problem is named after cognitive scientist Don Norman, who described the phenomenon in his 1988 book "The Design of Everyday Things." A Norman door is any door whose design misleads users about how to operate it — for example, a door with a handle that implies pulling when it actually requires pushing. Such design failures arise when visual affordances (features that signal possible actions) and signifiers (perceptible cues that communicate where and how to act) contradict the door's actual mechanism.
 
 The concept has since been adopted widely in user-experience design and human–computer interaction as a canonical example of how design can fail to communicate its own operation. According to Norman, good design shifts cognitive burden onto the object's physical form, not onto the user.`,
   hallucinatedSummary:
 `The Norman door problem is named after industrial designer Don Norman, who described the phenomenon in his 1990 book "The Design of Everyday Things." A Norman door is any door whose design misleads users about how to operate it — for example, a door with a handle that implies pulling when it actually requires pushing. Such design failures arise when visual affordances and signifiers contradict the door's actual mechanism.
-
-Norman argued that a well-designed door should make the correct action immediately obvious without relying on labels such as "Push" or "Pull." Flat push plates should indicate pushing, while D-shaped or bar handles should indicate pulling. When these signals are absent or contradictory, users resort to trial and error — a moment colloquially called the "door dance."
 
 The concept has since been adopted widely in user-experience design as a canonical example of how design can fail to communicate its own operation. According to Norman, good design shifts cognitive burden onto the designer rather than the user.`,
   comprehensionQuestions: [
@@ -74,17 +70,13 @@ const TASK_B: StudyTask = {
   timeLimitMinutes: 3,
   expectedHallucinations: 3,
   sourceDocument:
-`Franches-Montagnes is a district in the canton of Jura in northwestern Switzerland. The name means "free mountains" in French, reflecting the medieval tax exemptions granted to settlers in the region. The district covers approximately 714 square kilometres of the Jura plateau, at elevations between 900 and 1,100 metres above sea level. The regional capital is Saignelégier.
+`Franches-Montagnes is a district in the canton of Jura in northwestern Switzerland. The district covers approximately 714 square kilometres of the Jura plateau, at elevations between 900 and 1,100 metres above sea level. The regional capital is Saignelégier.
 
-The region is internationally recognised for the Franches-Montagnes horse, a breed developed locally from the seventeenth century. Originally bred as a draught and working animal, the horse is valued for its robust build and good temperament, making it suitable for both agricultural use and leisure riding. The Marché-Concours national de chevaux, an annual horse fair and competition held in Saignelégier every August since 1897, is the region's most celebrated event and draws tens of thousands of visitors.
-
-The landscape of Franches-Montagnes is characterised by rolling meadows, dense forests, and peat bogs known locally as tourbières. The district has a continental climate with cold winters and mild summers. Its population is approximately 20,000, predominantly French-speaking.`,
+The region is internationally recognised for the Franches-Montagnes horse, bred locally from the seventeenth century as a draught and working animal. The Marché-Concours national de chevaux, an annual horse fair held in Saignelégier every August since 1897, draws tens of thousands of visitors. Its population is approximately 20,000, predominantly French-speaking.`,
   hallucinatedSummary:
-`Franches-Montagnes is a district in the canton of Bern in northwestern Switzerland. The name means "free mountains" in French, reflecting the medieval tax exemptions granted to settlers in the region. The district covers approximately 714 square kilometres of the Jura plateau, at elevations between 900 and 1,100 metres above sea level. The regional capital is Saignelégier.
+`Franches-Montagnes is a district in the canton of Bern in northwestern Switzerland. The district covers approximately 714 square kilometres of the Jura plateau, at elevations between 900 and 1,100 metres above sea level. The regional capital is Saignelégier.
 
-The region is internationally recognised for the Franches-Montagnes horse, a breed developed locally from the seventeenth century. Originally bred as a draught and working animal, the horse is valued for its robust build and good temperament, making it suitable for both agricultural use and leisure riding. The Marché-Concours national de chevaux, an annual horse fair and competition held in Saignelégier every August since 1912, is the region's most celebrated event and draws tens of thousands of visitors.
-
-The landscape of Franches-Montagnes is characterised by rolling meadows, dense forests, and peat bogs known locally as tourbières. The district has a continental climate with cold winters and mild summers. Its population is approximately 30,000, predominantly French-speaking.`,
+The region is internationally recognised for the Franches-Montagnes horse, bred locally from the seventeenth century as a draught and working animal. The Marché-Concours national de chevaux, an annual horse fair held in Saignelégier every August since 1912, draws tens of thousands of visitors. Its population is approximately 30,000, predominantly French-speaking.`,
   comprehensionQuestions: [
     {
       question: "In which Swiss canton is the Franches-Montagnes district located?",
@@ -108,21 +100,13 @@ const TASK_C: StudyTask = {
   timeLimitMinutes: 6,
   expectedHallucinations: 6,
   sourceDocument:
-`The Feria de Abril de Sevilla is one of Spain's most celebrated annual festivals, held in the Andalusian city of Seville. It typically takes place two weeks after Easter, lasting six days from Monday to Sunday. The fair originated in 1847 as a livestock market organised by two city councillors, José María Ybarra and Narciso Bonaplata. Over time, its character shifted from a commercial agricultural event into a predominantly social and festive celebration.
+`The Feria de Abril de Sevilla is one of Spain's most celebrated annual festivals, held in Seville. It takes place two weeks after Easter, lasting six days. The fair originated in 1847 as a livestock market organised by two city councillors, José María Ybarra and Narciso Bonaplata, and over time shifted into a predominantly social and festive celebration.
 
-The fairground, called the Real de la Feria, is situated in the Los Remedios neighbourhood of Seville. Each evening, the fairground is illuminated by an elaborate entrance gateway called the Portada, decorated annually with a distinct design. The grounds are lined with casetas — private marquees or tents — belonging to families, clubs, and political parties. Most casetas are private and accessible only by invitation; a smaller number are open to the public.
-
-Inside the casetas, guests dance the Sevillanas, a traditional four-part folk dance associated with the Seville region, and consume fino sherry, tapas, and a drink called rebujito, which is made by mixing fino sherry with lemon-flavoured soft drink. Traditional dress is central to the fair's identity: women typically wear the traje de flamenca (also called traje de gitana), a ruffled dress in vivid colours, while men often wear the traje corto — a short jacket with high-waisted trousers and a wide-brimmed hat.
-
-Horse-drawn carriages and riders on horseback parade through the fairground each afternoon, reflecting the region's equestrian heritage. The Feria de Abril attracts over one million visitors each year, making it a major driver of Seville's tourism economy. It follows the Semana Santa (Holy Week) processions, making the two events the centrepieces of the city's cultural calendar.`,
+The fairground (Real de la Feria) is situated in the Los Remedios neighbourhood. Its grounds are lined with casetas — private tents belonging to families, clubs, and political parties. Inside, guests dance the Sevillanas, a traditional four-part folk dance, and consume fino sherry and a drink called rebujito, made by mixing fino sherry with lemon-flavoured soft drink. The Feria de Abril attracts over one million visitors each year.`,
   hallucinatedSummary:
-`The Feria de Abril de Sevilla is one of Spain's most celebrated annual festivals, held in the Andalusian city of Seville. It typically takes place two weeks after Easter, lasting six days from Monday to Sunday. The fair originated in 1853 as a livestock market organised by two city councillors, José María Ybarra and Carlos Larios. Over time, its character shifted from a commercial agricultural event into a predominantly social and festive celebration.
+`The Feria de Abril de Sevilla is one of Spain's most celebrated annual festivals, held in Seville. It takes place two weeks after Easter, lasting six days. The fair originated in 1853 as a livestock market organised by two city councillors, José María Ybarra and Carlos Larios, and over time shifted into a predominantly social and festive celebration.
 
-The fairground, called the Real de la Feria, is situated in the Triana neighbourhood of Seville. Each evening, the fairground is illuminated by an elaborate entrance gateway called the Portada, decorated annually with a distinct design. The grounds are lined with casetas — private marquees or tents — belonging to families, clubs, and political parties. Most casetas are private and accessible only by invitation; a smaller number are open to the public.
-
-Inside the casetas, guests dance the Sevillanas, a traditional three-part folk dance associated with the Seville region, and consume fino sherry, tapas, and a drink called rebujito, which is made by mixing fino sherry with cola. Traditional dress is central to the fair's identity: women typically wear the traje de flamenca, a ruffled dress in vivid colours, while men often wear the traje corto — a short jacket with high-waisted trousers and a wide-brimmed hat.
-
-Horse-drawn carriages and riders on horseback parade through the fairground each afternoon, reflecting the region's equestrian heritage. The Feria de Abril attracts over two million visitors each year, making it a major driver of Seville's tourism economy. It follows the Semana Santa (Holy Week) processions, making the two events the centrepieces of the city's cultural calendar.`,
+The fairground (Real de la Feria) is situated in the Triana neighbourhood. Its grounds are lined with casetas — private tents belonging to families, clubs, and political parties. Inside, guests dance the Sevillanas, a traditional three-part folk dance, and consume fino sherry and a drink called rebujito, made by mixing fino sherry with cola. The Feria de Abril attracts over two million visitors each year.`,
   comprehensionQuestions: [
     {
       question: "According to the source document, in which year did the Feria de Abril originate?",
@@ -156,21 +140,13 @@ const TASK_D: StudyTask = {
   timeLimitMinutes: 6,
   expectedHallucinations: 5,
   sourceDocument:
-`Ice skating events have been part of the Winter Olympic Games since their inaugural edition in Chamonix, France, in 1924. The programme currently features three main skating disciplines: figure skating, speed skating (encompassing both long track and short track formats), and ice hockey — though ice hockey is commonly categorised separately as a team sport.
+`Ice skating events have been part of the Winter Olympic Games since their inaugural edition in Chamonix, France, in 1924. The programme features three main disciplines: figure skating, speed skating (long track and short track), and ice hockey.
 
-Figure skating made its Olympic debut at the 1908 Summer Games in London, making it one of the few sports to have appeared at both Summer and Winter Olympics. The discipline includes four events: men's singles, women's singles, pair skating, and ice dance. Ice dance was added to the Olympic programme in 1976 at the Innsbruck Winter Games. Scoring in figure skating was overhauled following a judging scandal that affected the pairs competition at the 2002 Salt Lake City Games; the International Skating Union subsequently replaced the traditional 6.0 system with the Code of Points (IJS).
-
-Long track speed skating has been an Olympic sport since 1924, with events ranging from 500 metres to 10,000 metres for men and 500 to 5,000 metres for women. Short track speed skating was introduced as a demonstration event at the 1988 Calgary Games and became a full medal event at the 1992 Albertville Games, with races contested on a 111.12-metre oval.
-
-The most decorated Winter Olympian in history is Norwegian cross-country skier Marit Bjørgen, with 15 medals. Among ice skaters, Dutch speed skater Ireen Wüst has won medals at five consecutive Winter Olympics, from Turin 2006 through Beijing 2022.`,
+Figure skating made its Olympic debut at the 1908 Summer Games in London. The discipline includes four events: men's singles, women's singles, pair skating, and ice dance. Ice dance was added in 1976 at the Innsbruck Winter Games. Scoring was overhauled following a judging scandal that affected the pairs competition at the 2002 Salt Lake City Games, when the International Skating Union replaced the 6.0 system with the Code of Points (IJS). Short track speed skating was introduced as a demonstration event at the 1988 Calgary Games and became a full medal event at the 1992 Albertville Games.`,
   hallucinatedSummary:
-`Ice skating events have been part of the Winter Olympic Games since their inaugural edition in Chamonix, France, in 1928. The programme currently features three main skating disciplines: figure skating, speed skating (encompassing both long track and short track formats), and ice hockey — though ice hockey is commonly categorised separately as a team sport.
+`Ice skating events have been part of the Winter Olympic Games since their inaugural edition in Chamonix, France, in 1928. The programme features three main disciplines: figure skating, speed skating (long track and short track), and ice hockey.
 
-Figure skating made its Olympic debut at the 1912 Summer Games in Stockholm, making it one of the few sports to have appeared at both Summer and Winter Olympics. The discipline includes four events: men's singles, women's singles, pair skating, and ice dance. Ice dance was added to the Olympic programme in 1980 at the Lake Placid Winter Games. Scoring in figure skating was overhauled following a judging scandal that affected the ice dance competition at the 2002 Salt Lake City Games; the International Skating Union subsequently replaced the traditional 6.0 system with the Code of Points (IJS).
-
-Long track speed skating has been an Olympic sport since 1924, with events ranging from 500 metres to 10,000 metres for men and 500 to 5,000 metres for women. Short track speed skating was introduced as a demonstration event at the 1984 Sarajevo Games and became a full medal event at the 1992 Albertville Games, with races contested on a 111.12-metre oval.
-
-The most decorated Winter Olympian in history is Norwegian cross-country skier Marit Bjørgen, with 15 medals. Among ice skaters, Dutch speed skater Ireen Wüst has won medals at five consecutive Winter Olympics, from Turin 2006 through Beijing 2022.`,
+Figure skating made its Olympic debut at the 1912 Summer Games in Stockholm. The discipline includes four events: men's singles, women's singles, pair skating, and ice dance. Ice dance was added in 1980 at the Lake Placid Winter Games. Scoring was overhauled following a judging scandal that affected the ice dance competition at the 2002 Salt Lake City Games, when the International Skating Union replaced the 6.0 system with the Code of Points (IJS). Short track speed skating was introduced as a demonstration event at the 1984 Sarajevo Games and became a full medal event at the 1992 Albertville Games.`,
   comprehensionQuestions: [
     {
       question: "In which city were the first Winter Olympic Games held?",
@@ -233,7 +209,7 @@ export class StudyTaskGenerator {
     steps.push({
       type: 'warmup',
       warmupImage: (process.env.PUBLIC_URL || '') + '/study/warmup.jpg',
-      warmupDurationSeconds: 90,
+      warmupDurationSeconds: 30,
     });
 
     // Block 1
