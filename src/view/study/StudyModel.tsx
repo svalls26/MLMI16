@@ -48,11 +48,14 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
     reset();
 
     if (currentStep.type === 'condition' && currentStep.condition) {
-      // Load necessary data into the model
+      // Load the current task's hallucinated summary into the model
       const setGptMessages = useModelStore.getState().setGptMessages;
       const setType = useModelStore.getState().setType;
-      setType(currentStep.condition.type);
-      setGptMessages(currentStep.condition.messages);
+      setType('text');
+      const currentTask = currentStep.condition.tasks[get().taskId];
+      if (currentTask) {
+        setGptMessages([{ role: "assistant", content: currentTask.hallucinatedSummary }]);
+      }
     }
 
   },
@@ -80,18 +83,9 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
   getTaskCode: () => {
     const currentStep = get().steps[get().stepId];
     if (currentStep && currentStep.type === 'condition' && currentStep.condition) {
-
-      const conditionLetter = currentStep.isDirect ? 'D' : 'C';
-      let modalityLetter = 'T';
-      if (currentStep.condition.type === 'svg') {
-        modalityLetter = 'S';
-      } else if (currentStep.condition.type === 'code') {
-        modalityLetter = 'C';
-      }
-
-      const taskLetter = ['LT', 'LA', 'LR', 'GT'][get().taskId];
-
-      return `[${modalityLetter}_${conditionLetter}] ${taskLetter}`;
+      const conditionLetter = currentStep.isDirect ? 'Direct' : 'Chat';
+      const taskLetter = get().taskId === 0 ? 'Short' : 'Long';
+      return `[${conditionLetter}] ${taskLetter}`;
     }
     return "";
   },
