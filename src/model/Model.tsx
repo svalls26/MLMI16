@@ -12,11 +12,11 @@ const hashSplitted = window.location.hash.split("?");
 const search = hashSplitted[hashSplitted.length-1]
 const params = new URLSearchParams(search);
 const key = params.get('k');
-let gptModel = atob(params.get('m') || btoa('gpt-4-1106-preview'));
+let gptModel = process.env.REACT_APP_GPT_MODEL || atob(params.get('m') || btoa('gpt-4o'));
 
 
 const openai = new OpenAI({
-  apiKey: atob(key || ""),
+  apiKey: process.env.REACT_APP_OPENAI_API_KEY || atob(key || ""),
   dangerouslyAllowBrowser: true
 });
 
