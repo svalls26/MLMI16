@@ -1,276 +1,306 @@
-import { MessageGPT } from "../../model/Model";
-
+export interface ComprehensionQuestion {
+  question: string;
+  options: string[];
+  correctIndex: number;
+}
 
 export interface StudyTask {
-  action: string;
-  imageUrl: string;
+  sourceDocument: string;
+  hallucinatedSummary: string;
+  timeLimitMinutes: number;
+  expectedHallucinations: number;
+  comprehensionQuestions: ComprehensionQuestion[];
 }
 
 export interface StudyCondition {
-  type: "text" | "svg" | "code";
-  messages: MessageGPT[],
-  tasks: StudyTask[],
+  type: "text";
+  tasks: StudyTask[];
 }
 
 export interface StudyStep {
-  type: 'condition' | 'message' | 'video';
-  video?: string
-  message?: string
-  condition?: StudyCondition
-  isDirect?: boolean,
-  saveData?: boolean,
+  type: 'condition' | 'message' | 'video' | 'questionnaire';
+  video?: string;
+  message?: string;
+  condition?: StudyCondition;
+  isDirect?: boolean;
+  saveData?: boolean;
+  questionnaireInterfaceOrder?: ['direct' | 'chat', 'direct' | 'chat'];
 }
+
+// ─── Source documents and hallucinated summaries ─────────────────────────────
+
+const TASK_A: StudyTask = {
+  timeLimitMinutes: 3,
+  expectedHallucinations: 3,
+  sourceDocument:
+`The Norman door problem is named after cognitive scientist Don Norman, who described the phenomenon in his 1988 book "The Design of Everyday Things." A Norman door is any door whose design misleads users about how to operate it — for example, a door with a handle that implies pulling when it actually requires pushing, or vice versa. Such design failures arise when visual affordances (features that signal possible actions) and signifiers (perceptible cues that communicate where and how to act) contradict the door's actual mechanism.
+
+Norman argued that a well-designed door should make the correct action immediately obvious without relying on labels such as "Push" or "Pull." Flat push plates should indicate pushing, while D-shaped or bar handles should indicate pulling. When these signals are absent or contradictory, users experience confusion and resort to trial and error — a moment colloquially called the "door dance."
+
+The concept has since been adopted widely in user-experience design and human–computer interaction as a canonical example of how design can fail to communicate its own operation. According to Norman, good design shifts cognitive burden onto the object's physical form, not onto the user.`,
+  hallucinatedSummary:
+`The Norman door problem is named after industrial designer Don Norman, who described the phenomenon in his 1990 book "The Design of Everyday Things." A Norman door is any door whose design misleads users about how to operate it — for example, a door with a handle that implies pulling when it actually requires pushing. Such design failures arise when visual affordances and signifiers contradict the door's actual mechanism.
+
+Norman argued that a well-designed door should make the correct action immediately obvious without relying on labels such as "Push" or "Pull." Flat push plates should indicate pushing, while D-shaped or bar handles should indicate pulling. When these signals are absent or contradictory, users resort to trial and error — a moment colloquially called the "door dance."
+
+The concept has since been adopted widely in user-experience design as a canonical example of how design can fail to communicate its own operation. According to Norman, good design shifts cognitive burden onto the designer rather than the user.`,
+  comprehensionQuestions: [
+    {
+      question: "According to the source document, in which year was \"The Design of Everyday Things\" published?",
+      options: ["1985", "1988", "1990", "1992"],
+      correctIndex: 1,
+    },
+    {
+      question: "What term describes features that signal possible actions in design?",
+      options: ["Signifiers", "Affordances", "Mappings", "Feedback"],
+      correctIndex: 1,
+    },
+    {
+      question: "According to the source document, onto what does good design shift cognitive burden?",
+      options: [
+        "The user",
+        "The designer",
+        "Labels such as Push or Pull",
+        "The object's physical form",
+      ],
+      correctIndex: 3,
+    },
+  ],
+};
+
+const TASK_B: StudyTask = {
+  timeLimitMinutes: 3,
+  expectedHallucinations: 3,
+  sourceDocument:
+`Franches-Montagnes is a district in the canton of Jura in northwestern Switzerland. The name means "free mountains" in French, reflecting the medieval tax exemptions granted to settlers in the region. The district covers approximately 714 square kilometres of the Jura plateau, at elevations between 900 and 1,100 metres above sea level. The regional capital is Saignelégier.
+
+The region is internationally recognised for the Franches-Montagnes horse, a breed developed locally from the seventeenth century. Originally bred as a draught and working animal, the horse is valued for its robust build and good temperament, making it suitable for both agricultural use and leisure riding. The Marché-Concours national de chevaux, an annual horse fair and competition held in Saignelégier every August since 1897, is the region's most celebrated event and draws tens of thousands of visitors.
+
+The landscape of Franches-Montagnes is characterised by rolling meadows, dense forests, and peat bogs known locally as tourbières. The district has a continental climate with cold winters and mild summers. Its population is approximately 20,000, predominantly French-speaking.`,
+  hallucinatedSummary:
+`Franches-Montagnes is a district in the canton of Bern in northwestern Switzerland. The name means "free mountains" in French, reflecting the medieval tax exemptions granted to settlers in the region. The district covers approximately 714 square kilometres of the Jura plateau, at elevations between 900 and 1,100 metres above sea level. The regional capital is Saignelégier.
+
+The region is internationally recognised for the Franches-Montagnes horse, a breed developed locally from the seventeenth century. Originally bred as a draught and working animal, the horse is valued for its robust build and good temperament, making it suitable for both agricultural use and leisure riding. The Marché-Concours national de chevaux, an annual horse fair and competition held in Saignelégier every August since 1912, is the region's most celebrated event and draws tens of thousands of visitors.
+
+The landscape of Franches-Montagnes is characterised by rolling meadows, dense forests, and peat bogs known locally as tourbières. The district has a continental climate with cold winters and mild summers. Its population is approximately 30,000, predominantly French-speaking.`,
+  comprehensionQuestions: [
+    {
+      question: "In which Swiss canton is the Franches-Montagnes district located?",
+      options: ["Bern", "Neuchâtel", "Jura", "Fribourg"],
+      correctIndex: 2,
+    },
+    {
+      question: "In which year was the Marché-Concours national de chevaux first held?",
+      options: ["1847", "1897", "1912", "1923"],
+      correctIndex: 1,
+    },
+    {
+      question: "What is the approximate population of the Franches-Montagnes district?",
+      options: ["10,000", "20,000", "30,000", "50,000"],
+      correctIndex: 1,
+    },
+  ],
+};
+
+const TASK_C: StudyTask = {
+  timeLimitMinutes: 6,
+  expectedHallucinations: 6,
+  sourceDocument:
+`The Feria de Abril de Sevilla is one of Spain's most celebrated annual festivals, held in the Andalusian city of Seville. It typically takes place two weeks after Easter, lasting six days from Monday to Sunday. The fair originated in 1847 as a livestock market organised by two city councillors, José María Ybarra and Narciso Bonaplata. Over time, its character shifted from a commercial agricultural event into a predominantly social and festive celebration.
+
+The fairground, called the Real de la Feria, is situated in the Los Remedios neighbourhood of Seville. Each evening, the fairground is illuminated by an elaborate entrance gateway called the Portada, decorated annually with a distinct design. The grounds are lined with casetas — private marquees or tents — belonging to families, clubs, and political parties. Most casetas are private and accessible only by invitation; a smaller number are open to the public.
+
+Inside the casetas, guests dance the Sevillanas, a traditional four-part folk dance associated with the Seville region, and consume fino sherry, tapas, and a drink called rebujito, which is made by mixing fino sherry with lemon-flavoured soft drink. Traditional dress is central to the fair's identity: women typically wear the traje de flamenca (also called traje de gitana), a ruffled dress in vivid colours, while men often wear the traje corto — a short jacket with high-waisted trousers and a wide-brimmed hat.
+
+Horse-drawn carriages and riders on horseback parade through the fairground each afternoon, reflecting the region's equestrian heritage. The Feria de Abril attracts over one million visitors each year, making it a major driver of Seville's tourism economy. It follows the Semana Santa (Holy Week) processions, making the two events the centrepieces of the city's cultural calendar.`,
+  hallucinatedSummary:
+`The Feria de Abril de Sevilla is one of Spain's most celebrated annual festivals, held in the Andalusian city of Seville. It typically takes place two weeks after Easter, lasting six days from Monday to Sunday. The fair originated in 1853 as a livestock market organised by two city councillors, José María Ybarra and Carlos Larios. Over time, its character shifted from a commercial agricultural event into a predominantly social and festive celebration.
+
+The fairground, called the Real de la Feria, is situated in the Triana neighbourhood of Seville. Each evening, the fairground is illuminated by an elaborate entrance gateway called the Portada, decorated annually with a distinct design. The grounds are lined with casetas — private marquees or tents — belonging to families, clubs, and political parties. Most casetas are private and accessible only by invitation; a smaller number are open to the public.
+
+Inside the casetas, guests dance the Sevillanas, a traditional three-part folk dance associated with the Seville region, and consume fino sherry, tapas, and a drink called rebujito, which is made by mixing fino sherry with cola. Traditional dress is central to the fair's identity: women typically wear the traje de flamenca, a ruffled dress in vivid colours, while men often wear the traje corto — a short jacket with high-waisted trousers and a wide-brimmed hat.
+
+Horse-drawn carriages and riders on horseback parade through the fairground each afternoon, reflecting the region's equestrian heritage. The Feria de Abril attracts over two million visitors each year, making it a major driver of Seville's tourism economy. It follows the Semana Santa (Holy Week) processions, making the two events the centrepieces of the city's cultural calendar.`,
+  comprehensionQuestions: [
+    {
+      question: "According to the source document, in which year did the Feria de Abril originate?",
+      options: ["1820", "1847", "1853", "1875"],
+      correctIndex: 1,
+    },
+    {
+      question: "In which neighbourhood of Seville is the Real de la Feria located?",
+      options: ["Triana", "El Arenal", "Los Remedios", "Santa Cruz"],
+      correctIndex: 2,
+    },
+    {
+      question: "How many parts does the Sevillanas folk dance have?",
+      options: ["Two", "Three", "Four", "Six"],
+      correctIndex: 2,
+    },
+    {
+      question: "What is rebujito made from?",
+      options: [
+        "Red wine and lemonade",
+        "Fino sherry and cola",
+        "Fino sherry and lemon-flavoured soft drink",
+        "Brandy and orange juice",
+      ],
+      correctIndex: 2,
+    },
+  ],
+};
+
+const TASK_D: StudyTask = {
+  timeLimitMinutes: 6,
+  expectedHallucinations: 5,
+  sourceDocument:
+`Ice skating events have been part of the Winter Olympic Games since their inaugural edition in Chamonix, France, in 1924. The programme currently features three main skating disciplines: figure skating, speed skating (encompassing both long track and short track formats), and ice hockey — though ice hockey is commonly categorised separately as a team sport.
+
+Figure skating made its Olympic debut at the 1908 Summer Games in London, making it one of the few sports to have appeared at both Summer and Winter Olympics. The discipline includes four events: men's singles, women's singles, pair skating, and ice dance. Ice dance was added to the Olympic programme in 1976 at the Innsbruck Winter Games. Scoring in figure skating was overhauled following a judging scandal that affected the pairs competition at the 2002 Salt Lake City Games; the International Skating Union subsequently replaced the traditional 6.0 system with the Code of Points (IJS).
+
+Long track speed skating has been an Olympic sport since 1924, with events ranging from 500 metres to 10,000 metres for men and 500 to 5,000 metres for women. Short track speed skating was introduced as a demonstration event at the 1988 Calgary Games and became a full medal event at the 1992 Albertville Games, with races contested on a 111.12-metre oval.
+
+The most decorated Winter Olympian in history is Norwegian cross-country skier Marit Bjørgen, with 15 medals. Among ice skaters, Dutch speed skater Ireen Wüst has won medals at five consecutive Winter Olympics, from Turin 2006 through Beijing 2022.`,
+  hallucinatedSummary:
+`Ice skating events have been part of the Winter Olympic Games since their inaugural edition in Chamonix, France, in 1928. The programme currently features three main skating disciplines: figure skating, speed skating (encompassing both long track and short track formats), and ice hockey — though ice hockey is commonly categorised separately as a team sport.
+
+Figure skating made its Olympic debut at the 1912 Summer Games in Stockholm, making it one of the few sports to have appeared at both Summer and Winter Olympics. The discipline includes four events: men's singles, women's singles, pair skating, and ice dance. Ice dance was added to the Olympic programme in 1980 at the Lake Placid Winter Games. Scoring in figure skating was overhauled following a judging scandal that affected the ice dance competition at the 2002 Salt Lake City Games; the International Skating Union subsequently replaced the traditional 6.0 system with the Code of Points (IJS).
+
+Long track speed skating has been an Olympic sport since 1924, with events ranging from 500 metres to 10,000 metres for men and 500 to 5,000 metres for women. Short track speed skating was introduced as a demonstration event at the 1984 Sarajevo Games and became a full medal event at the 1992 Albertville Games, with races contested on a 111.12-metre oval.
+
+The most decorated Winter Olympian in history is Norwegian cross-country skier Marit Bjørgen, with 15 medals. Among ice skaters, Dutch speed skater Ireen Wüst has won medals at five consecutive Winter Olympics, from Turin 2006 through Beijing 2022.`,
+  comprehensionQuestions: [
+    {
+      question: "In which city were the first Winter Olympic Games held?",
+      options: ["Oslo", "St. Moritz", "Chamonix", "Garmisch-Partenkirchen"],
+      correctIndex: 2,
+    },
+    {
+      question: "At which Games did ice dance become a full Olympic discipline?",
+      options: ["Sapporo 1972", "Innsbruck 1976", "Lake Placid 1980", "Sarajevo 1984"],
+      correctIndex: 1,
+    },
+    {
+      question: "Which competition was affected by the judging scandal at the 2002 Salt Lake City Games?",
+      options: ["Men's singles", "Ice dance", "Pairs skating", "Short track relay"],
+      correctIndex: 2,
+    },
+    {
+      question: "At which Games did short track speed skating become a full medal event?",
+      options: ["Calgary 1988", "Albertville 1992", "Lillehammer 1994", "Nagano 1998"],
+      correctIndex: 1,
+    },
+  ],
+};
+
+// Text set AC: Norman door (short) + Feria de Sevilla (long)
+const TEXT_SET_AC: StudyTask[] = [TASK_A, TASK_C];
+// Text set BD: Franches-Montagnes (short) + Winter Olympic ice skating (long)
+const TEXT_SET_BD: StudyTask[] = [TASK_B, TASK_D];
+
+// ─── Step generator ──────────────────────────────────────────────────────────
 
 export class StudyTaskGenerator {
 
   static generateSteps(participantId: number): StudyStep[] {
-    let steps: StudyStep[] = [{
-      type: "message",
-      message: "Thank you for participating in this study. Please, first complete this survey questionnaire: [demographic questions (link removed)]"
-    }
-    ];
+    const steps: StudyStep[] = [];
 
-    const latinSquare = [
-      [['T1', 'C1', 'S2'], ['C2', 'S1', 'T2']],
-      [['C1', 'S2', 'T1'], ['T2', 'C2', 'S1']],
-      [['C2', 'T2', 'S1'], ['C1', 'T1', 'S2']],
-      [['T2', 'S1', 'C2'], ['S2', 'C1', 'T1']],
-      [['S1', 'C2', 'T2'], ['T1', 'S2', 'C1']],
-      [['S2', 'T1', 'C1'], ['S1', 'T2', 'C2']],
+    // 4-condition 2×2 Latin square:
+    //  conditionIdx 0 → Block1=Chat+AC,     Block2=Direct+BD
+    //  conditionIdx 1 → Block1=Chat+BD,     Block2=Direct+AC
+    //  conditionIdx 2 → Block1=Direct+AC,   Block2=Chat+BD
+    //  conditionIdx 3 → Block1=Direct+BD,   Block2=Chat+AC
+    const conditionIdx = participantId % 4;
 
-      [['C2', 'S1', 'T2'], ['T1', 'C1', 'S2']],
-      [['T2', 'C2', 'S1'], ['C1', 'S2', 'T1']],
-      [['C1', 'T1', 'S2'], ['C2', 'T2', 'S1']],
-      [['S2', 'C1', 'T1'], ['T2', 'S1', 'C2']],
-      [['T1', 'S2', 'C1'], ['S1', 'C2', 'T2']],
-      [['S1', 'T2', 'C2'], ['S2', 'T1', 'C1']],
-    ]
+    const block1IsDirect = conditionIdx >= 2;
+    const block1Tasks = (conditionIdx === 0 || conditionIdx === 2) ? TEXT_SET_AC : TEXT_SET_BD;
+    const block2IsDirect = !block1IsDirect;
+    const block2Tasks = block1Tasks === TEXT_SET_AC ? TEXT_SET_BD : TEXT_SET_AC;
 
-    const order = latinSquare[participantId % latinSquare.length];
-    for (let conditionIdx = 0; conditionIdx < order.length; ++conditionIdx) {
-      const isBaseline = (participantId % 2) !== conditionIdx;
-      const modalities = order[conditionIdx];
-
-      for (const modality of modalities) {
-        const condition = modalityTask[modality];
-
-        const video_name = (condition.type) + "_" + (isBaseline ? 'chat' : 'direct');
-        // Video tutorial right before the condition
-        steps.push({
-          type: "video",
-          video: (process.env.PUBLIC_URL || "") + `/study/tuto/${video_name}.mp4`
-        });
-
-
-        if (condition.type === 'code' && isBaseline) {
-          condition.messages[condition.messages.length-1].content = "```javascript\n" + condition.messages[condition.messages.length-1].content + "\n```"
-        }
-
-        if (condition.type === 'svg' && isBaseline) {
-          condition.messages[condition.messages.length-1].content = "```html\n" + condition.messages[condition.messages.length-1].content + "\n```"
-        }
-
-        steps.push({
-          type: 'condition',
-          condition: condition,
-          isDirect: !isBaseline
-        });
-
-        steps.push({
-          type: 'message',
-          message: "Feel free to take a break, and press 'Next' whenever you are ready.",
-          saveData: true
-        });  
-      }
-
-
-
-
-      steps.push({
-        type: "message",
-        message: `End of this part. Please answer this questionnaire: [usability questions (link removed)]`        ,
+    // Stage 1 — Briefing and Consent
+    steps.push({
+      type: 'message',
+      message:
+        '<b>Stage 1 — Briefing and Consent</b><br><br>' +
+        'Welcome, and thank you for participating in this study. You will complete two fact-checking tasks using two different interfaces. ' +
+        'The session will be recorded. Please do not use any external resources during the tasks.<br><br>' +
+        'By clicking Next you confirm that you have read the information sheet and consent to participate.',
     });
 
+    // Stage 2 — Think-Aloud Practice and Familiarisation
+    steps.push({
+      type: 'message',
+      message:
+        '<b>Stage 2 — Think-Aloud Practice</b><br><br>' +
+        'Please think aloud throughout each task — verbalise everything you notice and every correction you intend to make.<br><br>' +
+        'Take 30 seconds to practise: describe what you see in the room around you out loud now, before clicking Next.',
+    });
+
+    // Block 1
+    if (block1IsDirect) {
+      // Show DirectGPT tutorial before first encounter
+      steps.push({
+        type: 'video',
+        video: (process.env.PUBLIC_URL || '') + '/study/tuto/text_direct.mp4',
+      });
     }
 
-    steps.push(
-      {
-          type: "message",
-          message: "Done! Thank you for participating in this study."
-      }
-  )
+    steps.push({
+      type: 'condition',
+      condition: { type: 'text', tasks: block1Tasks },
+      isDirect: block1IsDirect,
+    });
+
+    // Stage 4 — Washout between blocks
+    steps.push({
+      type: 'message',
+      message:
+        '<b>End of Block 1</b><br><br>' +
+        'Before continuing, please perform the following cognitive reset task:<br><br>' +
+        '<b>Count backwards from 25 in steps of three, out loud.</b><br>' +
+        '(25 → 22 → 19 → 16 …)<br><br>' +
+        'When you have finished, click Next to continue to Block 2.',
+    });
+
+    // Block 2
+    if (block2IsDirect) {
+      // Show DirectGPT tutorial before first encounter
+      steps.push({
+        type: 'video',
+        video: (process.env.PUBLIC_URL || '') + '/study/tuto/text_direct.mp4',
+      });
+    }
+
+    steps.push({
+      type: 'condition',
+      condition: { type: 'text', tasks: block2Tasks },
+      isDirect: block2IsDirect,
+      saveData: true,
+    });
+
+    // Stage 6 — Cognitive Effort Questionnaire
+    // Counterbalance interface order in questionnaire by participant parity
+    const questionnaireOrder: ['direct' | 'chat', 'direct' | 'chat'] =
+      participantId % 2 === 0 ? ['direct', 'chat'] : ['chat', 'direct'];
+
+    steps.push({
+      type: 'questionnaire',
+      questionnaireInterfaceOrder: questionnaireOrder,
+    });
+
+    // Stage 7 — Debrief
+    steps.push({
+      type: 'message',
+      message:
+        '<b>Stage 7 — Debrief</b><br><br>' +
+        'Thank you for completing the study.<br><br>' +
+        'This study investigated whether interface paradigm influences hallucination detection and critical evaluation of LLM-generated content. ' +
+        'The summaries you fact-checked contained deliberately embedded errors (manipulated statistics, inverted facts, and incorrect dates).<br><br>' +
+        'Your data will be kept confidential and used solely for research purposes. ' +
+        'You may withdraw your data within two weeks by contacting the experimenter.<br><br>' +
+        'Please feel free to ask any questions.',
+    });
 
     return steps;
-
-  }
-}
-
-
-
-const modalityTask: { [name: string]: StudyCondition } = {
-  /*********
-   * Text
-   ********/
-  "T2": {
-    type: 'text',
-    messages: [
-      {
-        content:
-          `I am by birth a Genevese, and my family is one of the most distinguished of that republic. My ancestors had been for many years counsellors and syndics, and my father had filled several public situations with honour and reputation. He was respected by all who knew him for his integrity and indefatigable attention to public business. He passed his younger days perpetually occupied by the affairs of his country; a variety of circumstances had prevented his marrying early, nor was it until the decline of life that he became a husband and the father of a family.
-
-As the circumstances of his marriage illustrate his character, I cannot refrain from relating them. One of his most intimate friends was a merchant who, from a flourishing state, fell, through numerous mischances, into poverty. This man, whose name was Beaufort, was of a proud and unbending disposition and could not bear to live in poverty and oblivion in the same country where he had formerly been distinguished for his rank and magnificence. Having paid his debts, therefore, in the most honourable manner, he retreated with his daughter to the town of Lucerne, where he lived unknown and in wretchedness. My father loved Beaufort with the truest friendship and was deeply grieved by his retreat in these unfortunate circumstances. He bitterly deplored the false pride which led his friend to a conduct so little worthy of the affection that united them. He lost no time in endeavouring to seek him out, with the hope of persuading him to begin the world again through his credit and assistance.`,
-        role: "assistant",
-      }],
-    tasks: [
-      { imageUrl: process.env.PUBLIC_URL + '/study/T2_synonyms.png', action: 'Words in yellow => synonyms' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/T2_describe.png', action: 'Text in yellow => more description' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/T2_shorten.png', action: 'Text in yellow => shorter' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/T2_tense.png', action: 'Text => future tense' },
-    ],
-  },
-
-  "T1": {
-    type: 'text',
-    messages: [
-      {
-        content:
-`Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, “and what is the use of a book,” thought Alice “without pictures or conversations?”
-
-So she was considering in her own mind (as well as she could, for the hot day made her feel very sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
-
-There was nothing so _very_ remarkable in that; nor did Alice think it so _very_ much out of the way to hear the Rabbit say to itself, “Oh dear! Oh dear! I shall be late!” (when she thought it over afterwards, it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); but when the Rabbit actually _took a watch out of its waistcoat-pocket_, and looked at it, and then hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she ran across the field after it, and fortunately was just in time to see it pop down a large rabbit-hole under the hedge.`,
-        role: "assistant",
-      }],
-    tasks: [
-      { imageUrl: process.env.PUBLIC_URL + '/study/T1_synonyms.png', action: 'Words in yellow => synonyms' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/T1_describe.png', action: 'Text in yellow => more description' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/T1_shorten.png', action: 'Text in yellow => shorter' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/T1_tense.png', action: 'Text => future tense' },
-    ],
-  },
-
-
-
-
-  /*********
-   * Code
-   ********/
-  'C1': {
-    type: 'code',
-    messages: [
-      {
-        content:
-`function printPyramid(rows) {
-  for (let i = 1; i <= rows; i++) {
-    let spaces = '';
-
-    for (let j = 0; j < rows - i; j++) {
-      spaces += ' ';
-    }
-
-    let asterisks = '';
-
-    for (let j = 0; j < 2 * i - 1; j++) {
-      asterisks += '*';
-    }
-
-    console.log(spaces + asterisks);
-  }
-}`,
-        role: "assistant",
-      }],
-    tasks: [
-      { imageUrl: process.env.PUBLIC_URL + '/study/C1_refactor.png', action: 'Variable in yellow => k' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/C1_while.png', action: 'Code in yellow => while loops' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/C1_factorize.png', action: 'Code in yellow => use repeat function' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/C1_python.png', action: 'to Python' },
-    ],
-  },
-
-
-  'C2': {
-    type: 'code',
-    messages: [
-      {
-        content:
-`function countValuesBelowMean(data, windowSize) {
-  for (let i = 0; i < data.length; i++) {
-    const startIndex = Math.max(0, i - windowSize + 1);
-    const windowData = data.slice(startIndex, i + 1);
-
-    let windowSum = 0;
-    for (const i of windowData) {
-      windowSum += i;
-    }
-
-    let countBelowMean = 0;
-    for (const i of windowData) {
-      if (i < windowSum / windowData.length) {
-        countBelowMean++;
-      }
-    }
-
-    console.log(countBelowMean);
-  }
-}`,
-        role: "assistant",
-      }],
-    tasks: [
-      { imageUrl: process.env.PUBLIC_URL + '/study/C2_refactor.png', action: 'Variable in yellow => renamed to \'value\'' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/C2_while.png', action: 'Code in yellow => while loops' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/C2_factorize.png', action: 'Code in yellow => use reduce function' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/C2_python.png', action: 'to Python' },
-    ],
-  },
-
-
-
-  /*********
-   * SVG
-   ********/
-  'S1': {
-    type: 'svg',
-    messages: [
-      {
-        content:
-          `<svg width="300" height="150">
-<circle cx="133" cy="33" r="15"/>
-<circle cx="151" cy="20" r="15"/>
-<circle cx="163" cy="56" r="15"/>
-<circle cx="140" cy="56" r="15"/>
-<circle cx="171" cy="33" r="15"/>
-<circle cx="151" cy="41" fill="white" r="12"/>
-</svg>`,
-        role: "assistant",
-      }],
-    tasks: [
-      { imageUrl: process.env.PUBLIC_URL + '/study/S1_colorize.png', action: 'Reproduce (colour gradient petals red/blue)' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/S1_draw.png', action: 'Reproduce approximately' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/S1_remove.png', action: 'Reproduce' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/S1_flip.png', action: 'Reproduce (upside down)' },
-    ],
-  },
-
-
-  'S2': {
-    type: 'svg',
-    messages: [
-      {
-        content:
-          `<svg width="300" height="150">
-<circle cx="152" cy="42" r="40" fill="#ffa600"/>
-<circle cx="137" cy="27" r="5"/>
-<circle cx="167" cy="27" r="5"/>
-<circle cx="152" cy="44" r="5"/>
-<path stroke="#000" stroke-width="2" d="M132 63h40"/>
-</svg>`,
-        role: "assistant",
-      }],
-    tasks: [
-      { imageUrl: process.env.PUBLIC_URL + '/study/S2_colorize.png', action: 'Reproduce (colour gradient eyes and face white/black)' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/S2_draw.png', action: 'Reproduce approximately' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/S2_remove.png', action: 'Reproduce' },
-      { imageUrl: process.env.PUBLIC_URL + '/study/S2_flip.png', action: 'Reproduce (upside down)' },
-    ]
   }
 }
