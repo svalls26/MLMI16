@@ -160,7 +160,7 @@ export default function TaskPanel(props: { task: StudyTask }) {
       {/* Source document */}
       <div style={{
         flexGrow: 1, background: 'white', borderRadius: 5, padding: 10,
-        overflowY: 'auto', fontSize: 12, lineHeight: 1.6,
+        overflowY: 'auto', fontSize: 15, lineHeight: 1.6,
       }}>
         <b style={{ display: 'block', marginBottom: 6 }}>Source document</b>
         {task.sourceDocument.split('\n\n').map((para, i) => (
