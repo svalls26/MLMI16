@@ -42,6 +42,10 @@ export default function TaskPanel(props: { task: StudyTask }) {
   const stepId = useStudyModelStore((state) => state.stepId);
   const taskId = useStudyModelStore((state) => state.taskId);
   const logEvent = useStudyModelStore((state) => state.logEvent);
+  const logTaskStart = useStudyModelStore((state) => state.logTaskStart);
+  const logTaskEnd = useStudyModelStore((state) => state.logTaskEnd);
+  const logFirstInteraction = useStudyModelStore((state) => state.logFirstInteraction);
+  const addQuizResult = useStudyModelStore((state) => state.addQuizResult);
 
   const totalSeconds = task.timeLimitMinutes * 60;
 
@@ -55,11 +59,11 @@ export default function TaskPanel(props: { task: StudyTask }) {
   // Comprehension state
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [comprehensionAnswers, setComprehensionAnswers] = useState<number[]>([]);
+  const [comprehensionAnswers, setComprehensionAnswers] = useState<{ questionIndex: number; question: string; selectedOption: number; correctIndex: number; isCorrect: boolean }[]>([]);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Reset when task/step changes
+  // Reset when task/step changes and fire TASK_START
   useEffect(() => {
     setPhase('task');
     setSecondsLeft(task.timeLimitMinutes * 60);
@@ -68,6 +72,8 @@ export default function TaskPanel(props: { task: StudyTask }) {
     setQuestionIndex(0);
     setSelectedOption(null);
     setComprehensionAnswers([]);
+    logTaskStart();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepId, taskId, task.timeLimitMinutes]);
 
   // Countdown timer — only runs during 'task' phase
@@ -84,6 +90,7 @@ export default function TaskPanel(props: { task: StudyTask }) {
           setTimedOut(true);
           setPhase('count');
           logEvent('TASK_TIMED_OUT', { taskId });
+          logTaskEnd(true);
           return 0;
         }
         return prev - 1;
@@ -91,13 +98,20 @@ export default function TaskPanel(props: { task: StudyTask }) {
     }, 1000);
 
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [phase, taskId, logEvent]);
+  }, [phase, taskId, logEvent, logTaskEnd]);
+
+  // Log the first interaction inside the task (proxy for starting to engage)
+  // Exposed via onPointerDown on the source document area so any click/touch counts
+  const handleFirstInteraction = useCallback(() => {
+    logFirstInteraction();
+  }, [logFirstInteraction]);
 
   const handleDone = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     logEvent('USER_CLICKED_DONE', { secondsLeft, timedOut });
+    logTaskEnd(false);
     setPhase('count');
-  }, [secondsLeft, timedOut, logEvent]);
+  }, [secondsLeft, timedOut, logEvent, logTaskEnd]);
 
   const handleCountSubmit = useCallback(() => {
     const count = parseInt(hallucinationCount, 10);
@@ -108,12 +122,22 @@ export default function TaskPanel(props: { task: StudyTask }) {
 
   const handleComprehensionAnswer = useCallback(() => {
     if (selectedOption === null) return;
-    const updated = [...comprehensionAnswers, selectedOption];
+
+    const q = task.comprehensionQuestions[questionIndex];
+    const answerRecord = {
+      questionIndex,
+      question: q.question,
+      selectedOption,
+      correctIndex: q.correctIndex,
+      isCorrect: selectedOption === q.correctIndex,
+    };
+    const updated = [...comprehensionAnswers, answerRecord];
+
     logEvent('COMPREHENSION_ANSWERED', {
       questionIndex,
-      question: task.comprehensionQuestions[questionIndex].question,
+      question: q.question,
       selected: selectedOption,
-      correct: task.comprehensionQuestions[questionIndex].correctIndex,
+      correct: q.correctIndex,
     });
     setComprehensionAnswers(updated);
     setSelectedOption(null);
@@ -122,9 +146,17 @@ export default function TaskPanel(props: { task: StudyTask }) {
       setQuestionIndex(questionIndex + 1);
     } else {
       logEvent('COMPREHENSION_COMPLETE', { answers: updated });
+
+      // Persist structured quiz result to the store for ZIP export
+      addQuizResult({
+        hallucinationSelfReport: parseInt(hallucinationCount, 10),
+        expectedHallucinations: task.expectedHallucinations,
+        comprehensionAnswers: updated,
+      });
+
       nextStep();
     }
-  }, [selectedOption, comprehensionAnswers, questionIndex, task.comprehensionQuestions, logEvent, nextStep]);
+  }, [selectedOption, comprehensionAnswers, questionIndex, task, hallucinationCount, logEvent, addQuizResult, nextStep]);
 
   // Timer colour: green → orange (last minute) → red (last 30 s)
   const timerColour = secondsLeft <= 30 ? '#c0392b' : secondsLeft <= 60 ? '#e67e22' : '#27ae60';
@@ -157,11 +189,14 @@ export default function TaskPanel(props: { task: StudyTask }) {
         Use the interface on the right to correct the summary. Think aloud as you work.
       </div>
 
-      {/* Source document */}
-      <div style={{
-        flexGrow: 1, background: 'white', borderRadius: 5, padding: 10,
-        overflowY: 'auto', fontSize: 18, lineHeight: 1.6,
-      }}>
+      {/* Source document — onPointerDown captures the first interaction */}
+      <div
+        style={{
+          flexGrow: 1, background: 'white', borderRadius: 5, padding: 10,
+          overflowY: 'auto', fontSize: 18, lineHeight: 1.6,
+        }}
+        onPointerDown={handleFirstInteraction}
+      >
         <b style={{ display: 'block', marginBottom: 6 }}>Source document</b>
         {task.sourceDocument.split('\n\n').map((para, i) => (
           <p key={i} style={{ marginTop: 0, marginBottom: 8 }}>{para}</p>

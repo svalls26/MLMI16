@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useStudyModelStore } from "./StudyModel";
+import { QuestionnaireRecord, useStudyModelStore } from "./StudyModel";
 
 const ITEMS = [
   { key: 'mentalEffort', label: 'How much mental effort did you invest while using this interface?' },
@@ -73,6 +73,7 @@ export default function CognitiveEffortQuestionnaire({
 }) {
   const nextStep = useStudyModelStore((state) => state.nextStep);
   const logEvent = useStudyModelStore((state) => state.logEvent);
+  const setQuestionnaireData = useStudyModelStore((state) => state.setQuestionnaireData);
 
   const [directRatings, setDirectRatings] = useState<InterfaceRatings>({});
   const [chatRatings, setChatRatings] = useState<InterfaceRatings>({});
@@ -82,6 +83,23 @@ export default function CognitiveEffortQuestionnaire({
     ITEMS.every((item) => chatRatings[item.key] !== undefined);
 
   const handleSubmit = () => {
+    const record: QuestionnaireRecord = {
+      direct: {
+        mentalEffort: directRatings['mentalEffort'],
+        reliance: directRatings['reliance'],
+        sourceEngagement: directRatings['sourceEngagement'],
+      },
+      chat: {
+        mentalEffort: chatRatings['mentalEffort'],
+        reliance: chatRatings['reliance'],
+        sourceEngagement: chatRatings['sourceEngagement'],
+      },
+      submittedAt: Date.now(),
+    };
+
+    // Persist for ZIP export
+    setQuestionnaireData(record);
+    // Keep the existing CSV log
     logEvent('QUESTIONNAIRE_SUBMITTED', { directRatings, chatRatings });
     nextStep();
   };

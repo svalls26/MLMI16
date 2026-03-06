@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import ChatInterface from "../ChatInterface";
 import DirectInterface from "../DirectInterface";
 import TextualEntity from "../entities/TextualEntity";
+import { recordingService } from "../../services/RecordingService";
 import CognitiveEffortQuestionnaire from "./CognitiveEffortQuestionnaire";
 import StudyMessage from "./StudyMessage";
 import { useStudyModelStore } from "./StudyModel";
@@ -24,6 +25,11 @@ export default function StudyInterface() {
   const startFresh = useStudyModelStore((state) => state.startFresh);
   const logEvent = useStudyModelStore((state) => state.logEvent);
   const setIsDataSaved = useStudyModelStore((state) => state.setIsDataSaved);
+  const isDataSaved = useStudyModelStore((state) => state.isDataSaved);
+  const downloadZip = useStudyModelStore((state) => state.downloadSessionZip);
+
+  // Track the previous step so we can detect condition → non-condition transitions
+  const prevStepRef = useRef<StudyStep | null>(null);
 
   // Use URL parameters to generate the steps
   const hashSplitted = window.location.hash.split("?");
@@ -44,6 +50,43 @@ export default function StudyInterface() {
     }
   }
 
+  // ── Recording lifecycle ────────────────────────────────────────────────────
+  // Start recording when entering a condition step; stop + finalize CSV block
+  // when leaving one.
+  useEffect(() => {
+    const currentStep = steps[stepId];
+    const prevStep = prevStepRef.current;
+
+    if (!isDataSaved) {
+      prevStepRef.current = currentStep ?? null;
+      return;
+    }
+
+    // Leaving a condition step → stop recording and finalise the CSV block
+    if (prevStep?.type === 'condition' && currentStep?.type !== 'condition') {
+      recordingService.stopBlock().then(() => {
+        logEvent('RECORDING_STOPPED', { stepId: prevStep });
+      });
+      // Finalize the CSV for this block into csvBlocks[]
+      // (saveData() already handles this when saveData flag is present;
+      //  we call it here unconditionally so both blocks are always captured)
+      useStudyModelStore.getState().saveData(true);
+    }
+
+    // Entering a condition step → start recording
+    if (currentStep?.type === 'condition' && prevStep?.type !== 'condition') {
+      const blockLabel = `P${participantId}_block${stepId}`;
+      recordingService.startBlock(blockLabel).then(({ audioOk, screenOk }) => {
+        logEvent('RECORDING_STARTED', { blockLabel, audioOk, screenOk });
+      });
+    }
+
+    prevStepRef.current = currentStep ?? null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepId]);
+
+  // ──────────────────────────────────────────────────────────────────────────
+
   if (participantId < 0) {
     return <StudyMessage message="Error: Make sure the URL is correct." />;
   }
@@ -53,9 +96,18 @@ export default function StudyInterface() {
     currentStep = steps[stepId];
   }
 
+  // Last step in the sequence → show debrief with ZIP download button
+  const isLastStep = stepId === steps.length - 1;
+
   if (currentStep) {
     if (currentStep.type === 'message') {
-      return <StudyMessage message={currentStep.message || ""} />;
+      return (
+        <StudyMessage
+          message={currentStep.message || ""}
+          showDownloadButton={isLastStep && isDataSaved}
+          onDownload={downloadZip}
+        />
+      );
 
     } else if (currentStep.type === 'warmup') {
       return <StudyWarmup

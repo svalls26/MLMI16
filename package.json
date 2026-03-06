@@ -10,6 +10,7 @@
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.6",
     "diff": "^5.1.0",
+    "jszip": "^3.10.1",
     "openai": "^4.1.0",
     "prismjs": "^1.29.0",
     "react": "^18.2.0",
@@ -55,6 +56,7 @@
   },
   "devDependencies": {
     "@types/diff": "^5.0.3",
+    "@types/jszip": "^3.4.0",
     "@types/prismjs": "^1.26.0",
     "@types/react-syntax-highlighter": "^15.5.7"
   }
