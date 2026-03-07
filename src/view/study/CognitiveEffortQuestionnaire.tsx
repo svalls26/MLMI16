@@ -122,7 +122,8 @@ export default function CognitiveEffortQuestionnaire({
 
   return (
     <div style={{
-      width: '100%', minHeight: '100vh',
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+      overflowY: 'auto',
       display: 'flex', justifyContent: 'center', alignItems: 'flex-start',
       padding: '40px 20px', boxSizing: 'border-box',
     }}>
