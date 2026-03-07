@@ -38,23 +38,7 @@ export default function StudyInterface() {
   const pid = params.get('pid');
   const pstepId = params.get('stepId');
   const dataSaved = params.get('dataSaved');
-
-  // If not launched from the Launcher (dataSaved param absent), redirect there
-  if (dataSaved !== "true") {
-    window.location.hash = '/';
-    return null;
-  }
-
-  setIsDataSaved(dataSaved === "true");
-  if (participantId === -1 && pid) {
-    setParticipantId(participantId = parseInt(pid));
-    setSteps(StudyTaskGenerator.generateSteps(participantId));
-    if (pstepId) {
-      setStepId(stepId = parseInt(pstepId));
-    } else {
-      nextStep();
-    }
-  }
+  const launchedFromLauncher = dataSaved === "true";
 
   // ── Recording lifecycle ────────────────────────────────────────────────────
   // Start recording when entering a condition step; stop + finalize CSV block
@@ -92,6 +76,23 @@ export default function StudyInterface() {
   }, [stepId]);
 
   // ──────────────────────────────────────────────────────────────────────────
+
+  // If not launched from the Launcher (dataSaved param absent), redirect there
+  if (!launchedFromLauncher) {
+    window.location.hash = '/';
+    return null;
+  }
+
+  setIsDataSaved(true);
+  if (participantId === -1 && pid) {
+    setParticipantId(participantId = parseInt(pid));
+    setSteps(StudyTaskGenerator.generateSteps(participantId));
+    if (pstepId) {
+      setStepId(stepId = parseInt(pstepId));
+    } else {
+      nextStep();
+    }
+  }
 
   if (participantId < 0) {
     return <StudyMessage message="Error: Make sure the URL is correct." />;
