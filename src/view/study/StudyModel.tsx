@@ -306,15 +306,6 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
       csvBlocks: [...state.csvBlocks, { label: blockLabel, csv }],
     }));
 
-    // Legacy per-block download (keeps existing experimenter workflow)
-    const element = document.createElement('a');
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(csv));
-    element.setAttribute('download', `${blockLabel}.csv`);
-    element.style.display = 'none';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-
     if (clear) {
       set({ csvData: CSV_HEADER });
     }
