@@ -51,6 +51,10 @@ export default function DirectInterface(props: { children: React.ReactNode, left
           navigator.clipboard.writeText(selectedText);
         }
       } else if (event.key.length === 1 && event.key !== ' ') {
+        // If focus is already inside an input/textarea, let the browser handle it
+        const tag = (event.target as HTMLElement)?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
         // Otherwise, if just a simple letter key is pressed, we should make sure it types it inside the text box
         const promptBuilder = document.getElementById('main-prompt-builder');
         promptBuilder?.focus();

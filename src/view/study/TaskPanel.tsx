@@ -14,19 +14,20 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-// ─── Overlay for post-task questions ─────────────────────────────────────────
+// ─── Full-screen page for post-task questions ───────────────────────────────
+// Renders as a fixed overlay with a solid white background so participants
+// cannot reference the source document or summary while answering.
 
-function Overlay({ children }: { children: React.ReactNode }) {
+function QuizPage({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-      background: 'rgba(0,0,0,0.55)', zIndex: 9999,
+      background: 'white', zIndex: 9999,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <div style={{
-        background: 'white', borderRadius: 8, padding: 32,
         maxWidth: 560, width: '90%', maxHeight: '90vh', overflowY: 'auto',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+        padding: 32,
       }}>
         {children}
       </div>
@@ -218,7 +219,7 @@ export default function TaskPanel(props: { task: StudyTask }) {
 
       {/* ── Hallucination count overlay ── */}
       {phase === 'count' && (
-        <Overlay>
+        <QuizPage>
           <h3 style={{ marginTop: 0 }}>How many hallucinations did you find?</h3>
           <p style={{ color: '#555', fontSize: 14 }}>
             Enter the number of hallucinations you identified in the summary (not necessarily corrected).
@@ -244,12 +245,12 @@ export default function TaskPanel(props: { task: StudyTask }) {
               Next
             </button>
           </div>
-        </Overlay>
+        </QuizPage>
       )}
 
-      {/* ── Comprehension questions overlay ── */}
+      {/* ── Comprehension questions (full-screen page) ── */}
       {phase === 'comprehension' && task.comprehensionQuestions.length > 0 && (
-        <Overlay>
+        <QuizPage>
           <p style={{ fontSize: 12, color: '#888', margin: '0 0 6px' }}>
             Comprehension question {questionIndex + 1} of {task.comprehensionQuestions.length}
           </p>
@@ -286,7 +287,7 @@ export default function TaskPanel(props: { task: StudyTask }) {
               {questionIndex + 1 < task.comprehensionQuestions.length ? 'Next question' : 'Submit'}
             </button>
           </div>
-        </Overlay>
+        </QuizPage>
       )}
     </div>
   );

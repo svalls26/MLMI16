@@ -1,8 +1,8 @@
 // ─── RecordingService ──────────────────────────────────────────────────────
-// Manages per-block audio (microphone) and screen MediaRecorder instances.
-// Audio captures the participant's think-aloud voice.
-// Screen captures cursor / interaction behaviour.
-// Both recorders write to in-memory chunk arrays and expose Blobs on stop.
+// Manages audio (microphone) and screen recording across the whole session.
+// Streams are acquired ONCE at session start so the participant only grants
+// permissions a single time. Per-block, new MediaRecorder instances are
+// created on the existing streams, and their chunks are stored as Blobs.
 
 export interface BlockRecording {
   blockLabel: string;
@@ -11,26 +11,44 @@ export interface BlockRecording {
 }
 
 class RecordingService {
+  // Persistent streams — acquired once, reused across blocks
+  private audioStream: MediaStream | null = null;
+  private screenStream: MediaStream | null = null;
+
+  // Per-block recorders
   private audioRecorder: MediaRecorder | null = null;
   private screenRecorder: MediaRecorder | null = null;
   private audioChunks: BlobPart[] = [];
   private screenChunks: BlobPart[] = [];
+
   private completedBlocks: BlockRecording[] = [];
   private currentBlockLabel = '';
 
   // ── Public API ──────────────────────────────────────────────────────────
 
   /**
-   * Start audio + screen recording for a new block.
-   * Returns which streams were successfully acquired so the caller can log it.
+   * Acquire microphone + screen streams once at session start.
+   * Call this early (e.g. after consent) so the permission prompts only
+   * appear once.  Returns which streams were successfully acquired.
    */
-  async startBlock(blockLabel: string): Promise<{ audioOk: boolean; screenOk: boolean }> {
+  async acquireStreams(): Promise<{ audioOk: boolean; screenOk: boolean }> {
+    const audioOk = await this.acquireAudioStream();
+    const screenOk = await this.acquireScreenStream();
+    return { audioOk, screenOk };
+  }
+
+  /**
+   * Start audio + screen recording for a new block, using the already-
+   * acquired streams.  If a stream was not acquired, that recorder is
+   * silently skipped.
+   */
+  startBlock(blockLabel: string): { audioOk: boolean; screenOk: boolean } {
     this.currentBlockLabel = blockLabel;
     this.audioChunks = [];
     this.screenChunks = [];
 
-    const audioOk = await this.startAudio();
-    const screenOk = await this.startScreen();
+    const audioOk = this.startAudioRecorder();
+    const screenOk = this.startScreenRecorder();
     return { audioOk, screenOk };
   }
 
@@ -59,8 +77,12 @@ class RecordingService {
     return this.completedBlocks;
   }
 
-  /** Reset state (call between study sessions if reusing the page). */
+  /** Release streams and reset state (call between sessions). */
   clear(): void {
+    this.audioStream?.getTracks().forEach((t) => t.stop());
+    this.screenStream?.getTracks().forEach((t) => t.stop());
+    this.audioStream = null;
+    this.screenStream = null;
     this.completedBlocks = [];
     this.audioChunks = [];
     this.screenChunks = [];
@@ -68,19 +90,11 @@ class RecordingService {
     this.screenRecorder = null;
   }
 
-  // ── Private helpers ─────────────────────────────────────────────────────
+  // ── Stream acquisition (once per session) ─────────────────────────────
 
-  private async startAudio(): Promise<boolean> {
+  private async acquireAudioStream(): Promise<boolean> {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : 'audio/webm';
-      this.audioRecorder = new MediaRecorder(stream, { mimeType });
-      this.audioRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) this.audioChunks.push(e.data);
-      };
-      this.audioRecorder.start(1000); // flush a chunk every second
+      this.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       return true;
     } catch (e) {
       console.warn('[RecordingService] Microphone unavailable:', e);
@@ -88,29 +102,62 @@ class RecordingService {
     }
   }
 
-  private async startScreen(): Promise<boolean> {
+  private async acquireScreenStream(): Promise<boolean> {
     try {
-      const stream = await (navigator.mediaDevices as any).getDisplayMedia({
-        video: { frameRate: 10 }, // 10 fps is sufficient for interaction analysis
-        audio: false,             // voice is captured separately via microphone
+      this.screenStream = await (navigator.mediaDevices as any).getDisplayMedia({
+        video: { frameRate: 10 },
+        audio: false,
       });
+      // If the user ends the screen share via the browser chrome, mark the
+      // stream as gone so we don't try to create recorders on a dead track.
+      this.screenStream!.getVideoTracks()[0].onended = () => {
+        this.screenStream = null;
+      };
+      return true;
+    } catch (e) {
+      console.warn('[RecordingService] Screen capture unavailable:', e);
+      return false;
+    }
+  }
+
+  // ── Per-block recorder management ─────────────────────────────────────
+
+  private startAudioRecorder(): boolean {
+    if (!this.audioStream || this.audioStream.getTracks().every((t) => t.readyState === 'ended')) {
+      return false;
+    }
+    try {
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : 'audio/webm';
+      this.audioRecorder = new MediaRecorder(this.audioStream, { mimeType });
+      this.audioRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) this.audioChunks.push(e.data);
+      };
+      this.audioRecorder.start(1000);
+      return true;
+    } catch (e) {
+      console.warn('[RecordingService] Audio recorder failed:', e);
+      return false;
+    }
+  }
+
+  private startScreenRecorder(): boolean {
+    if (!this.screenStream || this.screenStream.getTracks().every((t) => t.readyState === 'ended')) {
+      return false;
+    }
+    try {
       const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
         ? 'video/webm;codecs=vp8'
         : 'video/webm';
-      this.screenRecorder = new MediaRecorder(stream, { mimeType });
+      this.screenRecorder = new MediaRecorder(this.screenStream, { mimeType });
       this.screenRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) this.screenChunks.push(e.data);
-      };
-      // Stop recording automatically if the user ends screen share via the browser UI
-      stream.getVideoTracks()[0].onended = () => {
-        if (this.screenRecorder && this.screenRecorder.state !== 'inactive') {
-          this.screenRecorder.stop();
-        }
       };
       this.screenRecorder.start(1000);
       return true;
     } catch (e) {
-      console.warn('[RecordingService] Screen capture unavailable:', e);
+      console.warn('[RecordingService] Screen recorder failed:', e);
       return false;
     }
   }
@@ -129,7 +176,7 @@ class RecordingService {
         resolve(chunks.length > 0 ? new Blob(chunks, { type: mimeType }) : null);
       };
       recorder.stop();
-      recorder.stream.getTracks().forEach((t) => t.stop());
+      // Do NOT stop tracks here — we reuse the streams across blocks
     });
   }
 }
