@@ -40,6 +40,19 @@ export default function StudyInterface() {
   const dataSaved = params.get('dataSaved');
   const launchedFromLauncher = dataSaved === "true";
 
+  // ── Acquire recording streams once after consent ─────────────────────────
+  const streamsAcquiredRef = useRef(false);
+  useEffect(() => {
+    // Acquire mic + screen streams once the study session is active
+    if (isDataSaved && !streamsAcquiredRef.current) {
+      streamsAcquiredRef.current = true;
+      recordingService.acquireStreams().then(({ audioOk, screenOk }) => {
+        logEvent('STREAMS_ACQUIRED', { audioOk, screenOk });
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDataSaved]);
+
   // ── Recording lifecycle ────────────────────────────────────────────────────
   // Start recording when entering a condition step; stop + finalize CSV block
   // when leaving one.
@@ -57,18 +70,14 @@ export default function StudyInterface() {
       recordingService.stopBlock().then(() => {
         logEvent('RECORDING_STOPPED', { stepId: prevStep });
       });
-      // Finalize the CSV for this block into csvBlocks[]
-      // (saveData() already handles this when saveData flag is present;
-      //  we call it here unconditionally so both blocks are always captured)
       useStudyModelStore.getState().saveData(true);
     }
 
-    // Entering a condition step → start recording
+    // Entering a condition step → start recording (synchronous — streams already acquired)
     if (currentStep?.type === 'condition' && prevStep?.type !== 'condition') {
       const blockLabel = `P${participantId}_block${stepId}`;
-      recordingService.startBlock(blockLabel).then(({ audioOk, screenOk }) => {
-        logEvent('RECORDING_STARTED', { blockLabel, audioOk, screenOk });
-      });
+      const { audioOk, screenOk } = recordingService.startBlock(blockLabel);
+      logEvent('RECORDING_STARTED', { blockLabel, audioOk, screenOk });
     }
 
     prevStepRef.current = currentStep ?? null;
