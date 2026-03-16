@@ -108,13 +108,10 @@ export default function SourcePanel({ task, onSubmit, showSubmitButton }: Source
           background: 'white', borderRadius: 4, padding: '8px 10px',
           border: '1px solid #e0e0e0',
         }}>
-          Imagine you are working with a team and need to prepare a short summary of this document
-          for colleagues who have not read it. You are provided with this source text and an initial draft summary.
-          Please use the interface in whatever way feels most natural to you.
-          You may copy and paste from the source, ask questions, edit the summary, or verify any points
-          you consider important.<br /><br />
-          <b>You have up to {task.timeLimitMinutes} minutes, but you may finish whenever you feel the summary is
-          accurate and trustworthy enough to share.</b>
+          Use the interface in whatever way feels most natural to you — copy from the source, ask
+          questions, edit the summary, or verify any points you consider important.<br /><br />
+          <b>You have up to {task.timeLimitMinutes} minutes, but you may finish whenever you feel
+          the summary is accurate and trustworthy enough to share.</b>
         </div>
       </div>
 

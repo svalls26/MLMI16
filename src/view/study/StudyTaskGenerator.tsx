@@ -130,23 +130,23 @@ export class StudyTaskGenerator {
     const block2IsDirect = !block1IsDirect;
     const block2Task     = block1Task === TASK_T1 ? TASK_T2 : TASK_T1;
 
-    // Stage 1 — Briefing and Consent
+    // Stage 1 — Briefing, Consent, and Task Description
     steps.push({
       type: 'message',
       message:
-        '<b>Stage 1 — Briefing and Consent</b><br><br>' +
-        'Welcome, and thank you for participating in this study. You will complete two document-review tasks using two different interfaces. ' +
+        '<b>Briefing and Consent</b><br><br>' +
+        'Welcome, and thank you for participating in this study. ' +
         'The session will be recorded (audio and screen). Please do not use any external resources during the tasks.<br><br>' +
+        '<b>Your task (repeated for two texts):</b><br><br>' +
+        'Imagine you are working with a team and need to prepare a short summary of a document for colleagues who have not read it. ' +
+        'You are provided with the original source text and an initial draft summary. ' +
+        'Please use the interface in whatever way feels most natural to you. ' +
+        'You may copy and paste from the source, ask questions, edit the summary, or verify any points you consider important. ' +
+        'You have up to 10 minutes per text, but you may finish whenever you feel the summary is accurate and trustworthy enough to share.<br><br>' +
+        'You will complete this task twice, each time with a different text and a different interface.<br><br>' +
         'After clicking Next, you will be asked to grant microphone and screen-sharing permissions. ' +
         'These are needed only once for the entire session.<br><br>' +
         'By clicking Next you confirm that you have read the information sheet and consent to participate.',
-    });
-
-    // Stage 2 — Think-Aloud Practice
-    steps.push({
-      type: 'warmup',
-      warmupImage: (process.env.PUBLIC_URL || '') + '/study/warmup.jpg',
-      warmupDurationSeconds: 30,
     });
 
     // Block 1
@@ -163,15 +163,12 @@ export class StudyTaskGenerator {
       isDirect: block1IsDirect,
     });
 
-    // Washout between blocks
+    // Between blocks — simple continuation prompt
     steps.push({
       type: 'message',
       message:
         '<b>End of Task 1</b><br><br>' +
-        'Before continuing, please perform the following brief cognitive reset:<br><br>' +
-        '<b>Count backwards from 25 in steps of three, out loud.</b><br>' +
-        '(25 → 22 → 19 → 16 …)<br><br>' +
-        'When you have finished, click Next to continue to Task 2.',
+        'Well done. When you are ready, click Next to begin Task 2.',
     });
 
     // Block 2
