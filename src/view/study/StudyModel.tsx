@@ -89,6 +89,10 @@ interface StudyModelActions {
   addQuizResult: (record: Omit<QuizRecord, 'stepId' | 'taskId' | 'taskCode' | 'condition'>) => void;
   setQuestionnaireData: (data: QuestionnaireRecord) => void;
 
+  // ── Draft editing ──
+  logDraftEdit: (content: string) => void;
+  logFinalSummarySubmitted: (content: string) => void;
+
   // ── Session ZIP download ──
   downloadSessionZip: () => Promise<void>;
 }
@@ -139,27 +143,26 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
       const setGptMessages = useModelStore.getState().setGptMessages;
       const setType = useModelStore.getState().setType;
       setType('text');
-      const currentTask = currentStep.condition.tasks[get().taskId];
-      if (currentTask) {
-        setGptMessages([{ role: 'assistant', content: currentTask.hallucinatedSummary }]);
+
+      if (currentStep.isDirect) {
+        // Direct condition: seed TextualEntity with the hallucinated summary so
+        // participants can manipulate it via DirectGPT prompts.
+        const task = currentStep.condition.task;
+        if (task) {
+          setGptMessages([{ role: 'assistant', content: task.hallucinatedSummary }]);
+        }
+      } else {
+        // Chat condition: start with an empty conversation — participants decide
+        // how and whether to use the chat interface.
+        setGptMessages([]);
       }
     }
   },
 
   nextStep: () => {
     const currentStep = get().steps[get().stepId];
-    // Still have tasks in the current condition block → advance task
-    if (
-      currentStep?.type === 'condition' &&
-      currentStep.condition &&
-      get().taskId + 1 < currentStep.condition.tasks.length
-    ) {
-      set((state) => ({ taskId: state.taskId + 1 }));
-      get().startFresh();
-      get().logEvent('NEXT_STEP', { previous: currentStep, now: get().steps[get().stepId] });
-      return;
-    }
 
+    // Each condition step now holds exactly one task — always advance to next step.
     if (get().stepId + 1 < get().steps.length) {
       set((state) => ({ stepId: state.stepId + 1, taskId: 0 }));
       get().logEvent('NEXT_STEP', { previous: currentStep, now: get().steps[get().stepId] });
@@ -174,9 +177,9 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
   getTaskCode: () => {
     const currentStep = get().steps[get().stepId];
     if (currentStep?.type === 'condition' && currentStep.condition) {
-      const conditionLetter = currentStep.isDirect ? 'Direct' : 'Chat';
-      const taskLetter = get().taskId === 0 ? 'Short' : 'Long';
-      return `[${conditionLetter}] ${taskLetter}`;
+      const conditionLabel = currentStep.isDirect ? 'Direct' : 'Chat';
+      const taskCode = currentStep.condition.task?.taskCode ?? '';
+      return `[${conditionLabel}] ${taskCode}`;
     }
     return '';
   },
@@ -291,6 +294,16 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
 
   setQuestionnaireData(data: QuestionnaireRecord) {
     set({ questionnaireData: data });
+  },
+
+  // ── Draft editing actions ──────────────────────────────────────────────
+
+  logDraftEdit(content: string) {
+    get().logEvent('DRAFT_EDITED', { contentLength: content.length, content });
+  },
+
+  logFinalSummarySubmitted(content: string) {
+    get().logEvent('FINAL_SUMMARY_SUBMITTED', { content });
   },
 
   // ── CSV persistence ────────────────────────────────────────────────────
