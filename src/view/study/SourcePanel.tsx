@@ -59,10 +59,23 @@ export default function SourcePanel({ task }: { task: StudyTask }) {
         justifyContent: 'space-between',
         alignItems: 'center',
       }}>
-        <span style={{ fontWeight: 600, fontSize: 13, color: '#333' }}>Source document</span>
+        <span style={{ fontWeight: 600, fontSize: 13, color: '#333' }}>Source document — Task {task.taskCode}</span>
         <span style={{ fontSize: 13, fontWeight: 500, color: timerColour, fontVariantNumeric: 'tabular-nums' }}>
           {timedOut ? 'Time elapsed' : formatTime(secondsLeft)}
         </span>
+      </div>
+
+      {/* ── Reminder strip ── */}
+      <div style={{
+        padding: '6px 14px',
+        background: '#fef9e7',
+        borderBottom: '1px solid #e8dfa0',
+        fontSize: 12,
+        color: '#7a6400',
+        flexShrink: 0,
+      }}>
+        Your colleagues will rely on this summary instead of reading the full document.
+        Finish whenever you feel it is accurate and ready to share — you have up to {task.timeLimitMinutes} min.
       </div>
 
       {/* ── Source document body ── */}
