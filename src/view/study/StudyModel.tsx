@@ -144,9 +144,17 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
       const setType = useModelStore.getState().setType;
       setType('text');
 
-      // Both conditions start with an empty interface. The draft summary lives
-      // in the DraftPanel (left column) and is managed independently.
-      setGptMessages([]);
+      if (currentStep.isDirect) {
+        // Direct condition: pre-load the summary into TextualEntity so participants
+        // can select and manipulate it with DirectGPT prompts.
+        const task = currentStep.condition.task;
+        if (task) {
+          setGptMessages([{ role: 'assistant', content: task.hallucinatedSummary }]);
+        }
+      } else {
+        // Chat condition: start with an empty conversation.
+        setGptMessages([]);
+      }
     }
   },
 
