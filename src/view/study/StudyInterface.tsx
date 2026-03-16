@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import ChatInterface from "../ChatInterface";
 import DirectInterface from "../DirectInterface";
 import TextualEntity from "../entities/TextualEntity";
-import { useModelStore } from "../../model/Model";
 import { recordingService } from "../../services/RecordingService";
 import CognitiveEffortQuestionnaire from "./CognitiveEffortQuestionnaire";
 import DraftPanel from "./DraftPanel";
@@ -31,8 +30,6 @@ export default function StudyInterface() {
   const setIsDataSaved = useStudyModelStore((state) => state.setIsDataSaved);
   const isDataSaved = useStudyModelStore((state) => state.isDataSaved);
   const downloadZip = useStudyModelStore((state) => state.downloadSessionZip);
-
-  const getLastGptMessage = useModelStore((state) => state.getLastGptMessage);
 
   // Track the previous step to detect condition → non-condition transitions
   const prevStepRef = useRef<StudyStep | null>(null);
@@ -85,19 +82,12 @@ export default function StudyInterface() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepId]);
 
-  // ── Task completion handler ───────────────────────────────────────────────
-  // Called by SourcePanel (Direct condition) or DraftPanel (Chat condition).
+  // ── Task completion handler (called by DraftPanel for both conditions) ───
   const handleTaskComplete = useCallback((finalContent: string) => {
     logFinalSummarySubmitted(finalContent);
     logTaskEnd(false);
     nextStep();
   }, [logFinalSummarySubmitted, logTaskEnd, nextStep]);
-
-  // For the Direct condition the final content lives in the model store.
-  const handleDirectSubmit = useCallback(() => {
-    const lastMsg = getLastGptMessage();
-    handleTaskComplete(lastMsg?.content ?? '');
-  }, [getLastGptMessage, handleTaskComplete]);
 
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -155,59 +145,39 @@ export default function StudyInterface() {
       const condition = currentStep.condition as StudyCondition;
       const currentTask = condition.task;
 
-      // ── Chat condition layout ─────────────────────────────────────────────
-      // Left: source document  |  Centre: empty chat  |  Right: editable draft
-      if (!currentStep.isDirect) {
-        return (
-          <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-            {/* Left — source document */}
-            <div style={{ width: '28%', minWidth: 260, maxWidth: 380, flexShrink: 0, height: '100%' }}>
-              <SourcePanel task={currentTask} />
-            </div>
+      // ── Shared layout (Chat and Direct) ───────────────────────────────────
+      // Left column: source document (top) + editable draft summary (bottom)
+      // Right column: LLM interface (ChatGPT-like or DirectGPT-like, starts empty)
+      const rightInterface = currentStep.isDirect
+        ? <DirectInterface><TextualEntity /></DirectInterface>
+        : <ChatInterface />;
 
-            {/* Centre — ChatGPT-like interface (starts empty) */}
-            <div style={{ flex: 1, height: '100%', overflow: 'hidden', borderLeft: '1px solid #ddd', borderRight: '1px solid #ddd' }}>
-              <ChatInterface />
-            </div>
-
-            {/* Right — editable draft summary */}
-            <div style={{ width: '30%', minWidth: 280, maxWidth: 420, flexShrink: 0, height: '100%' }}>
-              <DraftPanel task={currentTask} onSubmit={handleTaskComplete} />
-            </div>
-
-            {/* Reset button overlay */}
-            <div style={{ position: 'absolute', bottom: 10, left: 10, zIndex: 999, color: 'gray' }}>
-              <button onClick={() => { logEvent("USER_PRESSED_RESET"); startFresh(); }}>Reset</button>
-            </div>
-            <div style={{ position: 'absolute', bottom: 10, right: 10, zIndex: 999, color: 'gray', pointerEvents: 'none' }}>
-              {getTaskCode()}
-            </div>
-          </div>
-        );
-      }
-
-      // ── Direct condition layout ───────────────────────────────────────────
-      // Left: source document  |  Centre: DirectGPT (with summary content)
-      // The PromptReuseToolbar is rendered inside DirectInterface on the right side.
       return (
         <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-          {/* Left — source document + submit button */}
-          <div style={{ width: '28%', minWidth: 260, maxWidth: 380, flexShrink: 0, height: '100%' }}>
-            <SourcePanel
-              task={currentTask}
-              showSubmitButton={true}
-              onSubmit={handleDirectSubmit}
-            />
+
+          {/* Left column — source + draft stacked */}
+          <div style={{
+            width: '38%', minWidth: 320, maxWidth: 520,
+            flexShrink: 0, height: '100%',
+            display: 'flex', flexDirection: 'column',
+            borderRight: '1px solid #ccc',
+          }}>
+            {/* Top: source document */}
+            <div style={{ flex: '0 0 55%', overflow: 'hidden', borderBottom: '1px solid #ccc' }}>
+              <SourcePanel task={currentTask} />
+            </div>
+            {/* Bottom: editable draft */}
+            <div style={{ flex: '0 0 45%', overflow: 'hidden' }}>
+              <DraftPanel task={currentTask} onSubmit={handleTaskComplete} />
+            </div>
           </div>
 
-          {/* Centre + Right — DirectGPT interface (includes PromptReuseToolbar on its right) */}
+          {/* Right column — interface */}
           <div style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
-            <DirectInterface>
-              <TextualEntity />
-            </DirectInterface>
+            {rightInterface}
           </div>
 
-          {/* Reset button overlay */}
+          {/* Overlays */}
           <div style={{ position: 'absolute', bottom: 10, left: 10, zIndex: 999, color: 'gray' }}>
             <button onClick={() => { logEvent("USER_PRESSED_RESET"); startFresh(); }}>Reset</button>
           </div>
