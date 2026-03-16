@@ -55,17 +55,11 @@ The lake's high mineral content and dense, buoyant water have made the region a 
 
 Efforts to address the lake's shrinkage include a proposed Red Sea–Dead Sea Canal project, intended to replenish the Dead Sea's water levels by channelling brine from the Red Sea through a pipeline.`,
   hallucinatedSummary:
-`The Dead Sea is a salt lake in the Jordan Rift Valley, bounded by Jordan to the east and by Israel and the West Bank to the west. Sitting at roughly 430 metres below sea level, it marks the lowest point on Earth's land surface. The lake stretches approximately 50 kilometres in length and 15 kilometres across, reaching a maximum depth of around 150 metres.
+`The Dead Sea is a hypersaline lake in the Jordan Rift Valley, bordered by Jordan to the east and by Israel and the West Bank to the west. Its surface lies roughly 430 metres below sea level — the lowest point on Earth's land surface — and its maximum depth reaches around 150 metres.
 
-With a salinity of around 28 percent — nearly ten times that of ordinary seawater — the Dead Sea cannot support conventional aquatic life. The extremely high concentrations of sodium chloride, magnesium, potassium, and bromine leave the water hostile to fish and most marine organisms, though extremophile microorganisms do survive there.
+With a salinity of approximately 28 percent — nearly ten times that of ordinary seawater — the lake cannot support conventional aquatic life, though extremophile microorganisms do survive. It is fed primarily by the Jordan River, which enters from the south, and has no outflow channel; water is lost entirely through evaporation. Decades of upstream water diversion have caused the lake to shrink by about one metre per year since the 1970s.
 
-The lake is fed primarily by the Jordan River, which enters from the south, and has no conventional outflow. Water is lost almost entirely through evaporation, intensified by the hot, arid conditions of the region. Decades of upstream water diversion for agriculture and urban supply have caused the lake to shrink at around one metre per year since the 1970s.
-
-Commercially, the Dead Sea yields significant quantities of potash and bromine, which are extracted via industrial evaporation ponds concentrated mainly on the southern shore and managed by state companies in both countries. Potash is a key ingredient in fertiliser manufacture, while bromine has applications in pharmaceuticals and flame retardants.
-
-Historically, the Dead Sea region has been populated for millennia. The lake supplied bitumen to ancient civilisations, where it served in construction, waterproofing, and medicine. The northwestern shoreline is the site of the cave complex that yielded the Dead Sea Scrolls, religious manuscripts dating from the third century BCE to the first century CE, recovered in excavations carried out between 1946 and 1956.
-
-The dense, mineral-laden water creates strong buoyancy, and the area has long attracted health tourists who visit for the therapeutic properties attributed to its mud and waters, particularly for skin conditions like psoriasis.`,
+Potash and bromine are extracted via industrial evaporation ponds on the southern shore and managed by state-owned companies in both countries. The region was historically a key source of bitumen, used in construction, waterproofing, and medicine. The Dead Sea Scrolls — manuscripts dating from the third century BCE to the first century CE — were recovered from caves along the northwestern shore between 1946 and 1956.`,
   // H1: numerical distortion     — "34 percent" → "28 percent" (salinity)
   // H2: inverted relation        — Jordan River "enters from the north" → "enters from the south"
   // H3: numerical distortion     — maximum depth "306 metres" → "150 metres"
@@ -90,19 +84,11 @@ Brazil, now the world's largest coffee producer, accounts for approximately one-
 
 Today, coffee is the second most traded commodity in the world by value, after crude oil, and is consumed in virtually every country.`,
   hallucinatedSummary:
-`Coffee is thought to have originated in the Ethiopian highlands, where Coffea arabica grows naturally. The story of Kaldi the goatherd — who allegedly discovered coffee's stimulating effects by watching his goats eat the berries — is almost certainly a legend, but C. arabica is genuinely native to Ethiopia. The earliest reliable written accounts of coffee consumption come from fifteenth-century Yemen.
+`Coffee is believed to have originated in the Ethiopian highlands, where Coffea arabica grows wild. The earliest written records of its consumption date from fifteenth-century Yemen, where Sufi monks near the port of Mocha used it to sustain alertness during night prayers. Coffee houses — qahveh khaneh — spread across the Arab world by the early sixteenth century, functioning as social and intellectual hubs, and were periodically banned by authorities wary of political gatherings.
 
-Sufi monks near the city of Mocha in Yemen are credited with cultivating coffee and using it to remain alert during lengthy night prayers. The port of Mocha's central role in the early trade gave its name to the Yemeni coffee variety still referenced in certain traditions today. Coffee houses — qahveh khaneh — spread throughout the Arab world by the early sixteenth century, becoming hubs for social life and discussion; some Islamic authorities periodically banned them out of concern over political gatherings.
+Coffee reached Europe via Ottoman trade in the late sixteenth century. The first European coffee house opened in Venice in 1645, and English establishments became known as "penny universities" — for a small entrance fee, visitors could engage in philosophical debate and read the news. Lloyd's of London originated in a coffee house frequented by merchants and mariners.
 
-Coffee entered Europe through Ottoman trade in the late sixteenth century. The first European coffee house opened in Venice in 1645, and by the middle of the seventeenth century similar establishments had appeared in Oxford, London, and Amsterdam. English coffee houses were called "penny universities" — for a small entrance fee, visitors could read the latest news and engage in philosophical debate. Lloyd's of London, today a major insurance institution, grew out of a coffee house popular with merchants and sailors.
-
-The Dutch were among the earliest Europeans to grow coffee outside its native region. At the end of the seventeenth century, Dutch merchants secured coffee seedlings and cultivated them in Java, which is now part of Indonesia. Plants descended from this Javanese stock eventually reached France: in 1714, French King Louis XIV received a coffee plant as a diplomatic gift from the Dutch East India Company, which was subsequently planted in the Paris botanical gardens.
-
-A descendant of this plant was carried by French naval officer Gabriel de Clieu to Jamaica in 1723, where it took root and gave rise to coffee plantations across Central and South America.
-
-Brazil, the world's largest coffee producer, supplies roughly one-quarter of global output. Coffee was introduced there in the 1720s via seedlings brought in through Pará, and its expansion was heavily reliant on enslaved labour, a legacy whose effects persist in coffee-growing regions today.
-
-Coffee is now the second most traded commodity globally by value, behind crude oil, and is consumed almost universally.`,
+In 1714, the French acquired a coffee plant — reportedly received by King Louis XIV as a diplomatic gift from the Dutch East India Company — and planted it in the Paris botanical gardens. A descendant was transported by Gabriel de Clieu to Jamaica in 1723, seeding plantations across Central and South America. Brazil, now the world's largest coffee producer, accounts for roughly one-quarter of global output.`,
   // H1: subtle semantic drift    — "penny universities … conduct business, intellectual exchange" →
   //                                "philosophical debate" (drops commerce; shifts intellectual → philosophical)
   // H2: over-specific fabrication — "French obtained a coffee plant from Amsterdam" →

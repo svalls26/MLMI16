@@ -67,17 +67,7 @@ export default function DraftPanel({ task, onSubmit }: DraftPanelProps) {
         justifyContent: 'space-between',
         alignItems: 'center',
       }}>
-        <div>
-          <span style={{ fontWeight: 600, fontSize: 13, color: '#333' }}>Draft summary</span>
-          <span style={{
-            marginLeft: 8,
-            fontSize: 11,
-            color: '#888',
-            fontStyle: 'italic',
-          }}>
-            — edit directly or use the chat to refine it
-          </span>
-        </div>
+        <span style={{ fontWeight: 600, fontSize: 13, color: '#333' }}>Draft summary</span>
         <button
           onClick={handleSubmit}
           style={{

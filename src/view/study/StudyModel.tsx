@@ -144,18 +144,9 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
       const setType = useModelStore.getState().setType;
       setType('text');
 
-      if (currentStep.isDirect) {
-        // Direct condition: seed TextualEntity with the hallucinated summary so
-        // participants can manipulate it via DirectGPT prompts.
-        const task = currentStep.condition.task;
-        if (task) {
-          setGptMessages([{ role: 'assistant', content: task.hallucinatedSummary }]);
-        }
-      } else {
-        // Chat condition: start with an empty conversation — participants decide
-        // how and whether to use the chat interface.
-        setGptMessages([]);
-      }
+      // Both conditions start with an empty interface. The draft summary lives
+      // in the DraftPanel (left column) and is managed independently.
+      setGptMessages([]);
     }
   },
 
