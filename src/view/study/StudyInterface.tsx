@@ -1,15 +1,17 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import ChatInterface from "../ChatInterface";
 import DirectInterface from "../DirectInterface";
 import TextualEntity from "../entities/TextualEntity";
+import { useModelStore } from "../../model/Model";
 import { recordingService } from "../../services/RecordingService";
 import CognitiveEffortQuestionnaire from "./CognitiveEffortQuestionnaire";
+import DraftPanel from "./DraftPanel";
+import SourcePanel from "./SourcePanel";
 import StudyMessage from "./StudyMessage";
 import { useStudyModelStore } from "./StudyModel";
 import { StudyCondition, StudyStep, StudyTaskGenerator } from "./StudyTaskGenerator";
 import StudyVideo from "./StudyVideo";
 import StudyWarmup from "./StudyWarmup";
-import TaskPanel from "./TaskPanel";
 
 export default function StudyInterface() {
   let participantId = useStudyModelStore((state) => state.participantId);
@@ -24,14 +26,18 @@ export default function StudyInterface() {
   const getTaskCode = useStudyModelStore((state) => state.getTaskCode);
   const startFresh = useStudyModelStore((state) => state.startFresh);
   const logEvent = useStudyModelStore((state) => state.logEvent);
+  const logTaskEnd = useStudyModelStore((state) => state.logTaskEnd);
+  const logFinalSummarySubmitted = useStudyModelStore((state) => state.logFinalSummarySubmitted);
   const setIsDataSaved = useStudyModelStore((state) => state.setIsDataSaved);
   const isDataSaved = useStudyModelStore((state) => state.isDataSaved);
   const downloadZip = useStudyModelStore((state) => state.downloadSessionZip);
 
-  // Track the previous step so we can detect condition → non-condition transitions
+  const getLastGptMessage = useModelStore((state) => state.getLastGptMessage);
+
+  // Track the previous step to detect condition → non-condition transitions
   const prevStepRef = useRef<StudyStep | null>(null);
 
-  // Use URL parameters to generate the steps
+  // Use URL parameters to bootstrap the session
   const hashSplitted = window.location.hash.split("?");
   const search = hashSplitted[hashSplitted.length - 1];
   const params = new URLSearchParams(search);
@@ -43,7 +49,6 @@ export default function StudyInterface() {
   // ── Acquire recording streams once after consent ─────────────────────────
   const streamsAcquiredRef = useRef(false);
   useEffect(() => {
-    // Acquire mic + screen streams once the study session is active
     if (isDataSaved && !streamsAcquiredRef.current) {
       streamsAcquiredRef.current = true;
       recordingService.acquireStreams().then(({ audioOk, screenOk }) => {
@@ -54,8 +59,6 @@ export default function StudyInterface() {
   }, [isDataSaved]);
 
   // ── Recording lifecycle ────────────────────────────────────────────────────
-  // Start recording when entering a condition step; stop + finalize CSV block
-  // when leaving one.
   useEffect(() => {
     const currentStep = steps[stepId];
     const prevStep = prevStepRef.current;
@@ -65,7 +68,6 @@ export default function StudyInterface() {
       return;
     }
 
-    // Leaving a condition step → stop recording and finalise the CSV block
     if (prevStep?.type === 'condition' && currentStep?.type !== 'condition') {
       recordingService.stopBlock().then(() => {
         logEvent('RECORDING_STOPPED', { stepId: prevStep });
@@ -73,7 +75,6 @@ export default function StudyInterface() {
       useStudyModelStore.getState().saveData(true);
     }
 
-    // Entering a condition step → start recording (synchronous — streams already acquired)
     if (currentStep?.type === 'condition' && prevStep?.type !== 'condition') {
       const blockLabel = `P${participantId}_block${stepId}`;
       const { audioOk, screenOk } = recordingService.startBlock(blockLabel);
@@ -84,9 +85,22 @@ export default function StudyInterface() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepId]);
 
+  // ── Task completion handler ───────────────────────────────────────────────
+  // Called by SourcePanel (Direct condition) or DraftPanel (Chat condition).
+  const handleTaskComplete = useCallback((finalContent: string) => {
+    logFinalSummarySubmitted(finalContent);
+    logTaskEnd(false);
+    nextStep();
+  }, [logFinalSummarySubmitted, logTaskEnd, nextStep]);
+
+  // For the Direct condition the final content lives in the model store.
+  const handleDirectSubmit = useCallback(() => {
+    const lastMsg = getLastGptMessage();
+    handleTaskComplete(lastMsg?.content ?? '');
+  }, [getLastGptMessage, handleTaskComplete]);
+
   // ──────────────────────────────────────────────────────────────────────────
 
-  // If not launched from the Launcher (dataSaved param absent), redirect there
   if (!launchedFromLauncher) {
     window.location.hash = '/';
     return null;
@@ -112,7 +126,6 @@ export default function StudyInterface() {
     currentStep = steps[stepId];
   }
 
-  // Last step in the sequence → show debrief with ZIP download button
   const isLastStep = stepId === steps.length - 1;
 
   if (currentStep) {
@@ -140,32 +153,68 @@ export default function StudyInterface() {
 
     } else if (currentStep.type === 'condition') {
       const condition = currentStep.condition as StudyCondition;
-      const currentTask = condition.tasks[taskId];
+      const currentTask = condition.task;
 
-      let currentInterface: React.ReactNode;
+      // ── Chat condition layout ─────────────────────────────────────────────
+      // Left: source document  |  Centre: empty chat  |  Right: editable draft
+      if (!currentStep.isDirect) {
+        return (
+          <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+            {/* Left — source document */}
+            <div style={{ width: '28%', minWidth: 260, maxWidth: 380, flexShrink: 0, height: '100%' }}>
+              <SourcePanel task={currentTask} />
+            </div>
 
-      if (currentStep.isDirect) {
-        currentInterface = (
-          <DirectInterface leftSide={<TaskPanel task={currentTask} />}>
-            <TextualEntity />
-          </DirectInterface>
-        );
-      } else {
-        currentInterface = (
-          <ChatInterface leftSide={<TaskPanel task={currentTask} />} />
+            {/* Centre — ChatGPT-like interface (starts empty) */}
+            <div style={{ flex: 1, height: '100%', overflow: 'hidden', borderLeft: '1px solid #ddd', borderRight: '1px solid #ddd' }}>
+              <ChatInterface />
+            </div>
+
+            {/* Right — editable draft summary */}
+            <div style={{ width: '30%', minWidth: 280, maxWidth: 420, flexShrink: 0, height: '100%' }}>
+              <DraftPanel task={currentTask} onSubmit={handleTaskComplete} />
+            </div>
+
+            {/* Reset button overlay */}
+            <div style={{ position: 'absolute', bottom: 10, left: 10, zIndex: 999, color: 'gray' }}>
+              <button onClick={() => { logEvent("USER_PRESSED_RESET"); startFresh(); }}>Reset</button>
+            </div>
+            <div style={{ position: 'absolute', bottom: 10, right: 10, zIndex: 999, color: 'gray', pointerEvents: 'none' }}>
+              {getTaskCode()}
+            </div>
+          </div>
         );
       }
 
+      // ── Direct condition layout ───────────────────────────────────────────
+      // Left: source document  |  Centre: DirectGPT (with summary content)
+      // The PromptReuseToolbar is rendered inside DirectInterface on the right side.
       return (
-        <>
-          {currentInterface}
+        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+          {/* Left — source document + submit button */}
+          <div style={{ width: '28%', minWidth: 260, maxWidth: 380, flexShrink: 0, height: '100%' }}>
+            <SourcePanel
+              task={currentTask}
+              showSubmitButton={true}
+              onSubmit={handleDirectSubmit}
+            />
+          </div>
+
+          {/* Centre + Right — DirectGPT interface (includes PromptReuseToolbar on its right) */}
+          <div style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
+            <DirectInterface>
+              <TextualEntity />
+            </DirectInterface>
+          </div>
+
+          {/* Reset button overlay */}
           <div style={{ position: 'absolute', bottom: 10, left: 10, zIndex: 999, color: 'gray' }}>
             <button onClick={() => { logEvent("USER_PRESSED_RESET"); startFresh(); }}>Reset</button>
           </div>
           <div style={{ position: 'absolute', bottom: 10, right: 10, zIndex: 999, color: 'gray', pointerEvents: 'none' }}>
             {getTaskCode()}
           </div>
-        </>
+        </div>
       );
     }
   }
