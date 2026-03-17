@@ -29,8 +29,8 @@ function buildSteps(isDirect: boolean): TourStep[] {
     {
       title: 'Source document',
       body:
-        'This panel contains the original text your colleagues would otherwise read. ' +
-        'Use it to check whether the AI-generated summary on the right is accurate and complete.',
+        'This panel contains the source text for this task. ' +
+        'Use it to verify that the AI-generated summary on the right is accurate and complete.',
       highlight: { left: '0', top: '0', width: '38%', height: '100%' },
       tooltip: { left: '40%', top: '50%', transform: 'translateY(-50%)' },
     },
