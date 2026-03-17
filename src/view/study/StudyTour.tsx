@@ -41,8 +41,7 @@ function buildSteps(isDirect: boolean): TourStep[] {
           'Select any text in it and type a prompt below to ask the model to correct, rewrite, or expand that part. ' +
           'Use Undo / Redo to step back through changes.'
         : 'The AI has already drafted a summary for you. ' +
-          'Use the chat input below to ask the model to fix specific claims, adjust the wording, or restructure sections. ' +
-          'Each reply updates the summary in place.',
+          'Use the chat as you would normally do.',
       highlight: { left: '38%', top: '0', width: '62%', height: '100%' },
       tooltip: { left: '39%', top: '50%', transform: 'translateY(-50%)' },
     },
@@ -50,7 +49,9 @@ function buildSteps(isDirect: boolean): TourStep[] {
       title: 'Submit final summary',
       body:
         'When you are satisfied with the accuracy and quality of the summary, click this button. ' +
-        'You will see the final version and can still go back to edit further before finishing. ' +
+        (isDirect
+          ? 'You will see the final version and can still go back to edit further before finishing. '
+          : 'The summary saved will be the last message in the chat. You can still go back to edit further before finishing. ') +
         'The timer starts now.',
       highlight: { left: '0', top: 'calc(100% - 58px)', width: '38%', height: '58px' },
       tooltip: { left: '40%', bottom: '70px' },
