@@ -63,6 +63,11 @@ interface StudyModelState {
   // ── Per-task transient timing state ──
   taskStartTime: number | null;
   firstInteractionLogged: boolean;
+
+  // ── Second-pass review phase ──
+  phase: 'first-pass' | 'second-pass';
+  showReviewScreen: boolean;
+  firstPassSummary: string | null;
 }
 
 interface StudyModelActions {
@@ -93,13 +98,18 @@ interface StudyModelActions {
   logDraftEdit: (content: string) => void;
   logFinalSummarySubmitted: (content: string) => void;
 
+  // ── Second-pass review ──
+  submitForReview: (content: string) => void;
+  chooseEditFurther: () => void;
+  finishTask: (content: string) => void;
+
   // ── Session ZIP download ──
   downloadSessionZip: () => Promise<void>;
 }
 
 // ─── Initial state ─────────────────────────────────────────────────────────
 
-const CSV_HEADER = 'Timestamp,Participant,StepId,StepType,TaskId,TaskCode,Condition,Event,Parameters';
+const CSV_HEADER = 'Timestamp,Participant,StepId,StepType,TaskId,TaskCode,Condition,Phase,Event,Parameters';
 
 const initialState: StudyModelState = {
   participantId: -1,
@@ -114,6 +124,9 @@ const initialState: StudyModelState = {
   questionnaireData: null,
   taskStartTime: null,
   firstInteractionLogged: false,
+  phase: 'first-pass',
+  showReviewScreen: false,
+  firstPassSummary: null,
 };
 
 // ─── Store ─────────────────────────────────────────────────────────────────
@@ -137,6 +150,7 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
 
   startFresh: () => {
     const currentStep = get().steps[get().stepId];
+    set({ phase: 'first-pass', showReviewScreen: false, firstPassSummary: null });
     useModelStore.getState().reset();
 
     if (currentStep?.type === 'condition' && currentStep.condition) {
@@ -206,6 +220,7 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
       get().taskId,
       get().getTaskCode(),
       condition,
+      get().phase,
       eventName,
       strParams,
     ];
@@ -303,6 +318,25 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
 
   logFinalSummarySubmitted(content: string) {
     get().logEvent('FINAL_SUMMARY_SUBMITTED', { content });
+  },
+
+  // ── Second-pass review actions ─────────────────────────────────────────
+
+  submitForReview(content: string) {
+    get().logEvent('FIRST_PASS_SUBMITTED', { content });
+    set({ firstPassSummary: content, showReviewScreen: true });
+  },
+
+  chooseEditFurther() {
+    get().logEvent('REVIEW_EDIT_FURTHER', {});
+    set({ showReviewScreen: false, phase: 'second-pass' });
+  },
+
+  finishTask(content: string) {
+    get().logFinalSummarySubmitted(content);
+    get().logTaskEnd(false);
+    set({ showReviewScreen: false, phase: 'first-pass', firstPassSummary: null });
+    get().nextStep();
   },
 
   // ── CSV persistence ────────────────────────────────────────────────────
