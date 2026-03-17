@@ -80,8 +80,7 @@ function SubmitModal({ content, phase, onEditFurther, onFinish }: SubmitModalPro
           justifyContent: 'flex-end',
           gap: 10,
         }}>
-          {phase === 'first-pass' && (
-            <button
+          <button
               onClick={onEditFurther}
               style={{
                 padding: '8px 18px',
@@ -96,7 +95,6 @@ function SubmitModal({ content, phase, onEditFurther, onFinish }: SubmitModalPro
             >
               Edit further
             </button>
-          )}
           <button
             onClick={onFinish}
             style={{
