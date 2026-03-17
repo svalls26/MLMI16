@@ -1,11 +1,10 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import ChatInterface from "../ChatInterface";
 import DirectInterface from "../DirectInterface";
 import TextualEntity from "../entities/TextualEntity";
+import { useModelStore } from "../../model/Model";
 import { recordingService } from "../../services/RecordingService";
 import CognitiveEffortQuestionnaire from "./CognitiveEffortQuestionnaire";
-import DraftPanel from "./DraftPanel";
-import ReviewPanel from "./ReviewPanel";
 import SourcePanel from "./SourcePanel";
 import StudyMessage from "./StudyMessage";
 import { useStudyModelStore } from "./StudyModel";
@@ -15,14 +14,145 @@ import StudyWarmup from "./StudyWarmup";
 
 const IDLE_THRESHOLD_MS = 30_000; // 30 seconds
 
+// ─── Copy-paste modal ─────────────────────────────────────────────────────────
+
+interface SubmitModalProps {
+  content: string;
+  phase: 'first-pass' | 'second-pass';
+  onEditFurther: () => void;
+  onFinish: () => void;
+}
+
+function SubmitModal({ content, phase, onEditFurther, onFinish }: SubmitModalProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(content).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [content]);
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000,
+      background: 'rgba(0,0,0,0.45)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <div style={{
+        background: '#fff',
+        borderRadius: 8,
+        boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+        width: 600,
+        maxWidth: '90vw',
+        maxHeight: '80vh',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+
+        {/* Header */}
+        <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid #eee' }}>
+          <div style={{ fontWeight: 700, fontSize: 16, color: '#222', marginBottom: 4 }}>
+            Your final summary
+          </div>
+          <div style={{ fontSize: 13, color: '#666' }}>
+            Review your summary below. You can copy it, or go back to keep editing.
+          </div>
+        </div>
+
+        {/* Summary text */}
+        <textarea
+          readOnly
+          value={content || '(No summary generated yet — please interact with the interface first.)'}
+          style={{
+            flex: 1,
+            resize: 'none',
+            border: 'none',
+            outline: 'none',
+            padding: '14px 20px',
+            fontSize: 14,
+            lineHeight: 1.7,
+            color: '#222',
+            background: '#fffef5',
+            fontFamily: 'inherit',
+            minHeight: 220,
+            overflowY: 'auto',
+          }}
+          onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+        />
+
+        {/* Copy button */}
+        <div style={{ padding: '8px 20px 0', borderTop: '1px solid #eee' }}>
+          <button
+            onClick={handleCopy}
+            style={{
+              padding: '6px 16px',
+              background: copied ? '#27ae60' : '#f0f0f0',
+              color: copied ? '#fff' : '#333',
+              border: '1px solid #ccc',
+              borderRadius: 5,
+              fontSize: 13,
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+            }}
+          >
+            {copied ? '✓ Copied!' : '📋 Copy to clipboard'}
+          </button>
+        </div>
+
+        {/* Action buttons */}
+        <div style={{
+          padding: '12px 20px 16px',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 10,
+        }}>
+          {phase === 'first-pass' && (
+            <button
+              onClick={onEditFurther}
+              style={{
+                padding: '8px 18px',
+                background: '#fff',
+                color: '#2980b9',
+                border: '1.5px solid #2980b9',
+                borderRadius: 5,
+                fontWeight: 600,
+                fontSize: 13,
+                cursor: 'pointer',
+              }}
+            >
+              Edit further
+            </button>
+          )}
+          <button
+            onClick={onFinish}
+            style={{
+              padding: '8px 18px',
+              background: '#27ae60',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 5,
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: 'pointer',
+            }}
+          >
+            Done — finish task
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function StudyInterface() {
   let participantId = useStudyModelStore((state) => state.participantId);
   let steps = useStudyModelStore((state) => state.steps);
   let stepId = useStudyModelStore((state) => state.stepId);
-  const taskId = useStudyModelStore((state) => state.taskId);
   const phase = useStudyModelStore((state) => state.phase);
-  const showReviewScreen = useStudyModelStore((state) => state.showReviewScreen);
-  const firstPassSummary = useStudyModelStore((state) => state.firstPassSummary);
 
   const setParticipantId = useStudyModelStore((state) => state.setParticipantId);
   const setSteps = useStudyModelStore((state) => state.setSteps);
@@ -31,7 +161,6 @@ export default function StudyInterface() {
   const getTaskCode = useStudyModelStore((state) => state.getTaskCode);
   const startFresh = useStudyModelStore((state) => state.startFresh);
   const logEvent = useStudyModelStore((state) => state.logEvent);
-  const logTaskEnd = useStudyModelStore((state) => state.logTaskEnd);
   const setIsDataSaved = useStudyModelStore((state) => state.setIsDataSaved);
   const isDataSaved = useStudyModelStore((state) => state.isDataSaved);
   const downloadZip = useStudyModelStore((state) => state.downloadSessionZip);
@@ -39,7 +168,11 @@ export default function StudyInterface() {
   const chooseEditFurther = useStudyModelStore((state) => state.chooseEditFurther);
   const finishTask = useStudyModelStore((state) => state.finishTask);
 
-  // Track the previous step to detect condition → non-condition transitions
+  // ── Local modal state ─────────────────────────────────────────────────────
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState('');
+
+  // ── Previous step ref (recording lifecycle) ───────────────────────────────
   const prevStepRef = useRef<StudyStep | null>(null);
 
   // ── Idle detection ────────────────────────────────────────────────────────
@@ -68,7 +201,7 @@ export default function StudyInterface() {
     };
   }, [resetIdleTimer]);
 
-  // Use URL parameters to bootstrap the session
+  // ── URL bootstrapping ────────────────────────────────────────────────────
   const hashSplitted = window.location.hash.split("?");
   const search = hashSplitted[hashSplitted.length - 1];
   const params = new URLSearchParams(search);
@@ -77,7 +210,7 @@ export default function StudyInterface() {
   const dataSaved = params.get('dataSaved');
   const launchedFromLauncher = dataSaved === "true";
 
-  // ── Acquire recording streams once after consent ─────────────────────────
+  // ── Acquire recording streams once after consent ──────────────────────────
   const streamsAcquiredRef = useRef(false);
   useEffect(() => {
     if (isDataSaved && !streamsAcquiredRef.current) {
@@ -116,19 +249,24 @@ export default function StudyInterface() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepId]);
 
-  // ── Task completion handler ───────────────────────────────────────────────
-  const handleTaskComplete = useCallback((finalContent: string) => {
-    if (phase === 'first-pass') {
-      submitForReview(finalContent);
-    } else {
-      finishTask(finalContent);
-    }
-  }, [phase, submitForReview, finishTask]);
+  // ── Submit handler: grab current summary from model → open modal ──────────
+  const handleSubmitClick = useCallback(() => {
+    const content = useModelStore.getState().getLastGptMessage().content;
+    submitForReview(content);
+    setModalContent(content);
+    setShowModal(true);
+  }, [submitForReview]);
 
-  // ── Review panel callbacks ────────────────────────────────────────────────
-  const handleSatisfied = useCallback(() => {
-    finishTask(firstPassSummary ?? '');
-  }, [finishTask, firstPassSummary]);
+  // ── Modal callbacks ───────────────────────────────────────────────────────
+  const handleModalEditFurther = useCallback(() => {
+    chooseEditFurther();
+    setShowModal(false);
+  }, [chooseEditFurther]);
+
+  const handleModalFinish = useCallback(() => {
+    setShowModal(false);
+    finishTask(modalContent);
+  }, [finishTask, modalContent]);
 
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -186,21 +324,7 @@ export default function StudyInterface() {
       const condition = currentStep.condition as StudyCondition;
       const currentTask = condition.task;
 
-      // ── Review screen (shown after first-pass submit) ────────────────────
-      if (showReviewScreen && firstPassSummary !== null) {
-        return (
-          <ReviewPanel
-            task={currentTask}
-            submittedSummary={firstPassSummary}
-            onEditFurther={chooseEditFurther}
-            onSatisfied={handleSatisfied}
-          />
-        );
-      }
-
-      // ── Shared layout (Chat and Direct) ───────────────────────────────────
-      // Left column: source document (top) + editable draft summary (bottom)
-      // Right column: LLM interface (ChatGPT-like or DirectGPT-like)
+      // Right panel: Direct (TextualEntity is the summary) or Chat (last message is the summary)
       const rightInterface = currentStep.isDirect
         ? <DirectInterface><TextualEntity /></DirectInterface>
         : <ChatInterface />;
@@ -210,24 +334,17 @@ export default function StudyInterface() {
       return (
         <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
 
-          {/* Left column — source + draft stacked */}
+          {/* Left column — source document (full height) + submit button */}
           <div style={{
             width: '38%', minWidth: 320, maxWidth: 520,
             flexShrink: 0, height: '100%',
             display: 'flex', flexDirection: 'column',
             borderRight: '1px solid #ccc',
           }}>
-            {/* Top: source document */}
-            <div style={{ flex: '0 0 55%', overflow: 'hidden', borderBottom: '1px solid #ccc' }}>
-              <SourcePanel task={currentTask} />
-            </div>
-            {/* Bottom: editable draft */}
-            <div style={{ flex: '0 0 45%', overflow: 'hidden' }}>
-              <DraftPanel task={currentTask} onSubmit={handleTaskComplete} />
-            </div>
+            <SourcePanel task={currentTask} onSubmit={handleSubmitClick} />
           </div>
 
-          {/* Right column — interface */}
+          {/* Right column — LLM interface (the summary lives here) */}
           <div
             style={{ flex: 1, height: '100%', overflow: 'hidden' }}
             onPointerEnter={handleInterfaceFocus}
@@ -235,11 +352,21 @@ export default function StudyInterface() {
             {rightInterface}
           </div>
 
-          {/* Overlays */}
-          <div style={{ position: 'absolute', bottom: 10, left: 10, zIndex: 999, color: 'gray' }}>
+          {/* Copy-paste modal */}
+          {showModal && (
+            <SubmitModal
+              content={modalContent}
+              phase={phase}
+              onEditFurther={handleModalEditFurther}
+              onFinish={handleModalFinish}
+            />
+          )}
+
+          {/* Debug overlays */}
+          <div style={{ position: 'absolute', bottom: 10, left: 10, zIndex: 1100, color: 'gray' }}>
             <button onClick={() => { logEvent("USER_PRESSED_RESET"); startFresh(); }}>Reset</button>
           </div>
-          <div style={{ position: 'absolute', bottom: 10, right: 10, zIndex: 999, color: 'gray', pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', bottom: 10, right: 10, zIndex: 1100, color: 'gray', pointerEvents: 'none' }}>
             {getTaskCode()}
           </div>
         </div>
