@@ -63,17 +63,17 @@ The regulatory dimension followed a disaster. When thalidomide, prescribed for m
 
 The Cochrane Collaboration, established in 1993 in Oxford, formalized this infrastructure by systematically aggregating RCT evidence from across medical specialties into reviews that now inform clinical guidelines worldwide.`,
   hallucinatedSummary:
-`The randomized controlled trial emerged gradually as medicine's standard of evidence, taking centuries of improvised experimentation to become the regulatory requirement it is today.
+`The randomized controlled trial emerged as medicine's gold standard of evidence gradually, across several centuries — though its formal scientific codification was largely a twentieth-century achievement.
 
-Its origins are usually traced to James Lind, a Scottish naval surgeon who in 1747 recruited fourteen sailors with scurvy and assigned each of six pairs a different dietary supplement. The pair given citrus fruit recovered within days; none of the others did. Though Lind's design lacked randomization, it introduced the logic of simultaneous comparison that would prove foundational to later experimental medicine.
+Its origins are usually traced to James Lind, a Scottish naval surgeon who in 1747 recruited fourteen sailors with scurvy and assigned each of six pairs a different dietary supplement. The pair given citrus fruit recovered within days; none of the others did. Though Lind's design lacked randomization, it introduced the logic of simultaneous comparison that would prove foundational to experimental medicine.
 
-The statistical foundations were laid by Ronald Fisher, drawing on his work in agricultural field trials during the 1920s, who argued in his 1935 book Statistical Methods for Research Workers that randomly assigning subjects to treatment and control groups was the only reliable way to control for unknown confounding factors.
+The statistical foundations were laid by Ronald Fisher, drawing on agricultural field work during the 1920s. His central argument, published in his 1935 book Statistical Methods for Research Workers, was that randomly assigning subjects to conditions was the only reliable way to control for unknown confounding factors. Fisher worked at the Rothamsted Experimental Station in Hertfordshire, where the practical pressures of field agriculture sharpened his thinking about experimental control; his methods were subsequently taken up not only in medicine but in psychology, economics, and the social sciences.
 
-The clinical translation came in 1948, when Austin Bradford Hill designed a trial of streptomycin for pulmonary tuberculosis, conducted under the auspices of the British Medical Association. Using sealed random envelopes, the trial demonstrated that streptomycin significantly improved outcomes and that rigorous methodology could settle clinical disputes once decided by authority alone.
+The streptomycin trial of 1948 was a landmark: it proved that the treatment worked, and demonstrated that clinical questions could be settled by rigorous methodology rather than expert opinion. Austin Bradford Hill organised the study under the auspices of the British Medical Association, using sealed random envelopes to allocate patients to streptomycin or standard care.
 
-Bradford Hill later published, in 1965, ten criteria for judging whether a statistical association could be considered causal — a framework that remains a standard reference in epidemiology, shaping debates from the tobacco-cancer link to evaluations of hormone therapy.
+Bradford Hill later articulated, in 1965, ten criteria for judging whether a statistical association could be considered causal — a checklist covering factors such as strength of association, consistency, and biological plausibility. The criteria remain a widely cited reference in epidemiology, shaping debates from the tobacco-cancer link to evaluations of hormone therapy.
 
-The Cochrane Collaboration, established in Oxford in 1993, formalized this infrastructure by systematically compiling RCT evidence into reviews that now inform clinical guidelines worldwide.`,
+The Cochrane Collaboration, founded in Oxford in 1993, built on this tradition by systematically compiling RCT evidence across medical specialties, producing reviews that inform clinical guidelines worldwide.`,
 };
 
 // ── TASK T2 — Numerical Weather Prediction ───────────────────────────────────
@@ -92,17 +92,15 @@ Progress accelerated as computing power grew. The European Centre for Medium-Ran
 
 A further refinement came from recognising that small measurement uncertainties grow unpredictably as forecasts extend in time. Edward Lorenz had described the theoretical basis for this in his influential 1963 paper on deterministic chaos, showing that tiny initial differences in complex dynamic systems diverge exponentially. Rather than producing a single best estimate, meteorologists began running multiple simulations from slightly different starting conditions. ECMWF and the United States National Centers for Environmental Prediction both introduced operational ensemble forecasting in 1992, enabling forecasters to communicate not just a prediction but its associated uncertainty.`,
   hallucinatedSummary:
-`Before digital computing, weather forecasting relied on comparing current atmospheric patterns to historical precedents — a method generally limited to useful horizons of a day or two.
+`Before digital computing, weather forecasting relied entirely on comparing current atmospheric patterns to historical precedents — a systematic but subjective method, generally limited to a useful horizon of a day or two.
 
-The mathematical approach was first outlined by Lewis Fry Richardson in his 1922 book Weather Prediction by Numerical Process. Richardson's own wartime test calculation failed dramatically because of inadequate observational data, but the underlying equations were sound.
+The mathematical approach was first outlined by Lewis Fry Richardson in his 1922 book Weather Prediction by Numerical Process. Richardson had attempted a real numerical forecast during World War I, applying hydrodynamic equations to an actual weather event; after weeks of laborious hand calculation, his result was wildly inaccurate. He published the work anyway, including a celebrated thought experiment: completing a forecast in real time would require 640,000 human "computers" working simultaneously, each assigned a small region of the atmosphere and coordinated by a central conductor. The factory was imaginary, but the underlying equations were sound.
 
-His imagined "forecast factory" illuminated the scale of the computational challenge: completing a forecast in real time would require 640,000 human "computers" working simultaneously.
+The method was vindicated in 1950. Jule Charney's team at Princeton ran four twenty-four-hour simulations on ENIAC and showed that numerical forecasting could work. The results were published in the Journal of Meteorology; each simulation required roughly 24 hours of computation, but the proof of concept was complete.
 
-The first successful numerical forecast was produced in March 1950, when Jule Charney's team at Princeton ran four twenty-four-hour simulations on ENIAC. The results were published in the Journal of Meteorology, and although computation took roughly as long as the forecast period itself, the proof of concept was established.
+The European Centre for Medium-Range Weather Forecasts, established in 1965 in Reading, United Kingdom, was purpose-built to push skillful forecasting beyond the two-day horizon; by the mid-1980s, its global model was reliably producing five-day predictions.
 
-The European Centre for Medium-Range Weather Forecasts, established in 1965 in Reading, United Kingdom, was purpose-built to extend forecast skill beyond the two-day barrier; by the mid-1980s, its global model delivered reliable five-day predictions.
-
-The theoretical ceiling on forecasting was formalised by Edward Lorenz, whose 1962 paper on deterministic chaos showed that small initial measurement errors grow rapidly in complex systems. To manage this uncertainty, both ECMWF and the United States National Centers for Environmental Prediction introduced operational ensemble forecasting in 1992, generating multiple simulations from varied starting conditions to produce probabilistic predictions.`,
+The theoretical limit of predictability was formalised by Edward Lorenz, whose 1962 paper on deterministic chaos showed that small differences in initial conditions grow rapidly in complex dynamic systems. To manage this uncertainty, both ECMWF and the United States National Centers for Environmental Prediction introduced operational ensemble forecasting in 1992, running multiple simulations from slightly varied starting conditions to generate probabilistic predictions.`,
 };
 
 // ─── Step generator ──────────────────────────────────────────────────────────
@@ -132,12 +130,12 @@ export class StudyTaskGenerator {
         'Welcome, and thank you for participating in this study. ' +
         'The session will be recorded (audio and screen). Please do not use any external resources during the tasks.<br><br>' +
         '<b>Your task (repeated for two texts):</b><br><br>' +
-        'Imagine you are working with a team and need to prepare a short summary of a document for colleagues who have not read it. ' +
-        'You are provided with the original source text and an initial draft summary. ' +
-        'Your colleagues will rely on this summary instead of reading the full document. Please make sure it is accurate and ready to share.<br><br>' +
-        'Please use the interface in whatever way feels most natural to you. ' +
-        'You may copy and paste from the source, ask questions, edit the summary, or verify any points you consider important. ' +
-        'You have up to 10 minutes per text, but you may finish whenever you feel the summary is accurate and trustworthy enough to share.<br><br>' +
+        'You are provided with a source document and an AI-generated draft summary. ' +
+        'Your colleagues will rely on this summary instead of reading the source. ' +
+        'Please prepare it so that it\'s accurate, clearly written, well-structured, and ready to share. ' +
+        'Feel free to reorganise, rewrite, condense, or expand any part of it.<br><br>' +
+        'You may use the interface on the right in whatever way feels most natural. ' +
+        'You have up to 10 minutes per text, but you may finish whenever you feel the summary is ready.<br><br>' +
         'You will complete this task twice, each time with a different text and a different interface.<br><br>' +
         'After clicking Next, you will be asked to grant microphone and screen-sharing permissions. ' +
         'These are needed only once for the entire session.<br><br>' +

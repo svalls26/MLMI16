@@ -44,10 +44,14 @@ export default function SourcePanel({ task }: { task: StudyTask }) {
     logFirstInteraction();
   }, [logFirstInteraction]);
 
+  const handlePanelFocus = useCallback(() => {
+    logEvent('PANEL_FOCUS', { panel: 'source' });
+  }, [logEvent]);
+
   const timerColour = secondsLeft <= 60 ? '#b7770d' : '#555';
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#f8f8f8' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#f8f8f8' }} onPointerEnter={handlePanelFocus}>
 
       {/* ── Header: label + timer ── */}
       <div style={{
@@ -74,8 +78,8 @@ export default function SourcePanel({ task }: { task: StudyTask }) {
         color: '#7a6400',
         flexShrink: 0,
       }}>
-        Your colleagues will rely on this summary instead of reading the full document.
-        Finish whenever you feel it is accurate and ready to share — you have up to {task.timeLimitMinutes} min.
+        Your colleagues will rely on this summary instead of reading the source.
+        Please prepare it so that it's accurate, clearly written, well-structured, and ready to share — you have up to {task.timeLimitMinutes} min.
       </div>
 
       {/* ── Source document body ── */}

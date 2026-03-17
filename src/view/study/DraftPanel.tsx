@@ -6,7 +6,7 @@ import { StudyTask } from "./StudyTaskGenerator";
 
 interface DraftPanelProps {
   task: StudyTask;
-  /** Called when participant clicks "Submit final summary". */
+  /** Called when participant clicks the submit/finish button. */
   onSubmit: (finalContent: string) => void;
 }
 
@@ -15,17 +15,27 @@ interface DraftPanelProps {
 export default function DraftPanel({ task, onSubmit }: DraftPanelProps) {
   const stepId = useStudyModelStore((state) => state.stepId);
   const taskId = useStudyModelStore((state) => state.taskId);
+  const phase = useStudyModelStore((state) => state.phase);
+  const firstPassSummary = useStudyModelStore((state) => state.firstPassSummary);
   const logDraftEdit = useStudyModelStore((state) => state.logDraftEdit);
   const logFirstInteraction = useStudyModelStore((state) => state.logFirstInteraction);
+  const logEvent = useStudyModelStore((state) => state.logEvent);
 
-  const [draft, setDraft] = useState(task.hallucinatedSummary);
+  const initialContent = phase === 'second-pass' && firstPassSummary !== null
+    ? firstPassSummary
+    : task.hallucinatedSummary;
+
+  const [draft, setDraft] = useState(initialContent);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Reset draft whenever task changes
+  // Reset draft whenever task or phase changes
   useEffect(() => {
-    setDraft(task.hallucinatedSummary);
+    const content = phase === 'second-pass' && firstPassSummary !== null
+      ? firstPassSummary
+      : task.hallucinatedSummary;
+    setDraft(content);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stepId, taskId]);
+  }, [stepId, taskId, phase]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -48,14 +58,24 @@ export default function DraftPanel({ task, onSubmit }: DraftPanelProps) {
     logFirstInteraction();
   }, [logFirstInteraction]);
 
+  const handlePanelFocus = useCallback(() => {
+    logEvent('PANEL_FOCUS', { panel: 'draft' });
+  }, [logEvent]);
+
+  const isSecondPass = phase === 'second-pass';
+  const buttonLabel = isSecondPass ? "I'm satisfied — finish" : "Submit final summary";
+
   return (
-    <div style={{
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      background: '#fffef5',
-      borderLeft: '1px solid #ddd',
-    }}>
+    <div
+      style={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        background: '#fffef5',
+        borderLeft: '1px solid #ddd',
+      }}
+      onPointerEnter={handlePanelFocus}
+    >
 
       {/* ── Header ── */}
       <div style={{
@@ -67,12 +87,17 @@ export default function DraftPanel({ task, onSubmit }: DraftPanelProps) {
         justifyContent: 'space-between',
         alignItems: 'center',
       }}>
-        <span style={{ fontWeight: 600, fontSize: 13, color: '#333' }}>Draft summary</span>
+        <div>
+          <span style={{ fontWeight: 600, fontSize: 13, color: '#333' }}>Draft summary</span>
+          <span style={{ marginLeft: 8, fontSize: 11, color: '#999', fontStyle: 'italic' }}>
+            AI-generated draft
+          </span>
+        </div>
         <button
           onClick={handleSubmit}
           style={{
             padding: '6px 14px',
-            background: '#2980b9',
+            background: isSecondPass ? '#27ae60' : '#2980b9',
             color: 'white',
             border: 'none',
             borderRadius: 5,
@@ -82,7 +107,7 @@ export default function DraftPanel({ task, onSubmit }: DraftPanelProps) {
             whiteSpace: 'nowrap',
           }}
         >
-          Submit final summary
+          {buttonLabel}
         </button>
       </div>
 

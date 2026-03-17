@@ -5,6 +5,7 @@ import TextualEntity from "../entities/TextualEntity";
 import { recordingService } from "../../services/RecordingService";
 import CognitiveEffortQuestionnaire from "./CognitiveEffortQuestionnaire";
 import DraftPanel from "./DraftPanel";
+import ReviewPanel from "./ReviewPanel";
 import SourcePanel from "./SourcePanel";
 import StudyMessage from "./StudyMessage";
 import { useStudyModelStore } from "./StudyModel";
@@ -12,11 +13,16 @@ import { StudyCondition, StudyStep, StudyTaskGenerator } from "./StudyTaskGenera
 import StudyVideo from "./StudyVideo";
 import StudyWarmup from "./StudyWarmup";
 
+const IDLE_THRESHOLD_MS = 30_000; // 30 seconds
+
 export default function StudyInterface() {
   let participantId = useStudyModelStore((state) => state.participantId);
   let steps = useStudyModelStore((state) => state.steps);
   let stepId = useStudyModelStore((state) => state.stepId);
   const taskId = useStudyModelStore((state) => state.taskId);
+  const phase = useStudyModelStore((state) => state.phase);
+  const showReviewScreen = useStudyModelStore((state) => state.showReviewScreen);
+  const firstPassSummary = useStudyModelStore((state) => state.firstPassSummary);
 
   const setParticipantId = useStudyModelStore((state) => state.setParticipantId);
   const setSteps = useStudyModelStore((state) => state.setSteps);
@@ -26,13 +32,41 @@ export default function StudyInterface() {
   const startFresh = useStudyModelStore((state) => state.startFresh);
   const logEvent = useStudyModelStore((state) => state.logEvent);
   const logTaskEnd = useStudyModelStore((state) => state.logTaskEnd);
-  const logFinalSummarySubmitted = useStudyModelStore((state) => state.logFinalSummarySubmitted);
   const setIsDataSaved = useStudyModelStore((state) => state.setIsDataSaved);
   const isDataSaved = useStudyModelStore((state) => state.isDataSaved);
   const downloadZip = useStudyModelStore((state) => state.downloadSessionZip);
+  const submitForReview = useStudyModelStore((state) => state.submitForReview);
+  const chooseEditFurther = useStudyModelStore((state) => state.chooseEditFurther);
+  const finishTask = useStudyModelStore((state) => state.finishTask);
 
   // Track the previous step to detect condition → non-condition transitions
   const prevStepRef = useRef<StudyStep | null>(null);
+
+  // ── Idle detection ────────────────────────────────────────────────────────
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isIdleRef = useRef(false);
+
+  const resetIdleTimer = useCallback(() => {
+    if (isIdleRef.current) {
+      logEvent('IDLE_END', {});
+      isIdleRef.current = false;
+    }
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    idleTimerRef.current = setTimeout(() => {
+      isIdleRef.current = true;
+      logEvent('IDLE_START', {});
+    }, IDLE_THRESHOLD_MS);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logEvent]);
+
+  useEffect(() => {
+    const events = ['pointermove', 'keydown', 'scroll'] as const;
+    events.forEach((e) => window.addEventListener(e, resetIdleTimer, { passive: true }));
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, resetIdleTimer));
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [resetIdleTimer]);
 
   // Use URL parameters to bootstrap the session
   const hashSplitted = window.location.hash.split("?");
@@ -82,12 +116,19 @@ export default function StudyInterface() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepId]);
 
-  // ── Task completion handler (called by DraftPanel for both conditions) ───
+  // ── Task completion handler ───────────────────────────────────────────────
   const handleTaskComplete = useCallback((finalContent: string) => {
-    logFinalSummarySubmitted(finalContent);
-    logTaskEnd(false);
-    nextStep();
-  }, [logFinalSummarySubmitted, logTaskEnd, nextStep]);
+    if (phase === 'first-pass') {
+      submitForReview(finalContent);
+    } else {
+      finishTask(finalContent);
+    }
+  }, [phase, submitForReview, finishTask]);
+
+  // ── Review panel callbacks ────────────────────────────────────────────────
+  const handleSatisfied = useCallback(() => {
+    finishTask(firstPassSummary ?? '');
+  }, [finishTask, firstPassSummary]);
 
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -145,12 +186,26 @@ export default function StudyInterface() {
       const condition = currentStep.condition as StudyCondition;
       const currentTask = condition.task;
 
+      // ── Review screen (shown after first-pass submit) ────────────────────
+      if (showReviewScreen && firstPassSummary !== null) {
+        return (
+          <ReviewPanel
+            task={currentTask}
+            submittedSummary={firstPassSummary}
+            onEditFurther={chooseEditFurther}
+            onSatisfied={handleSatisfied}
+          />
+        );
+      }
+
       // ── Shared layout (Chat and Direct) ───────────────────────────────────
       // Left column: source document (top) + editable draft summary (bottom)
-      // Right column: LLM interface (ChatGPT-like or DirectGPT-like, starts empty)
+      // Right column: LLM interface (ChatGPT-like or DirectGPT-like)
       const rightInterface = currentStep.isDirect
         ? <DirectInterface><TextualEntity /></DirectInterface>
         : <ChatInterface />;
+
+      const handleInterfaceFocus = () => logEvent('PANEL_FOCUS', { panel: 'interface' });
 
       return (
         <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
@@ -173,7 +228,10 @@ export default function StudyInterface() {
           </div>
 
           {/* Right column — interface */}
-          <div style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
+          <div
+            style={{ flex: 1, height: '100%', overflow: 'hidden' }}
+            onPointerEnter={handleInterfaceFocus}
+          >
             {rightInterface}
           </div>
 
