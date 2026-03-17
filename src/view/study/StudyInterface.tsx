@@ -24,15 +24,6 @@ interface SubmitModalProps {
 }
 
 function SubmitModal({ content, phase, onEditFurther, onFinish }: SubmitModalProps) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(content).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, [content]);
-
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000,
@@ -81,25 +72,6 @@ function SubmitModal({ content, phase, onEditFurther, onFinish }: SubmitModalPro
           }}
           onClick={(e) => (e.target as HTMLTextAreaElement).select()}
         />
-
-        {/* Copy button */}
-        <div style={{ padding: '8px 20px 0', borderTop: '1px solid #eee' }}>
-          <button
-            onClick={handleCopy}
-            style={{
-              padding: '6px 16px',
-              background: copied ? '#27ae60' : '#f0f0f0',
-              color: copied ? '#fff' : '#333',
-              border: '1px solid #ccc',
-              borderRadius: 5,
-              fontSize: 13,
-              cursor: 'pointer',
-              transition: 'background 0.2s',
-            }}
-          >
-            {copied ? '✓ Copied!' : '📋 Copy to clipboard'}
-          </button>
-        </div>
 
         {/* Action buttons */}
         <div style={{
@@ -158,8 +130,6 @@ export default function StudyInterface() {
   const setSteps = useStudyModelStore((state) => state.setSteps);
   const setStepId = useStudyModelStore((state) => state.setStepId);
   const nextStep = useStudyModelStore((state) => state.nextStep);
-  const getTaskCode = useStudyModelStore((state) => state.getTaskCode);
-  const startFresh = useStudyModelStore((state) => state.startFresh);
   const logEvent = useStudyModelStore((state) => state.logEvent);
   const setIsDataSaved = useStudyModelStore((state) => state.setIsDataSaved);
   const isDataSaved = useStudyModelStore((state) => state.isDataSaved);
@@ -352,7 +322,7 @@ export default function StudyInterface() {
             {rightInterface}
           </div>
 
-          {/* Copy-paste modal */}
+        {/* Copy-paste modal */}
           {showModal && (
             <SubmitModal
               content={modalContent}
@@ -361,14 +331,6 @@ export default function StudyInterface() {
               onFinish={handleModalFinish}
             />
           )}
-
-          {/* Debug overlays */}
-          <div style={{ position: 'absolute', bottom: 10, left: 10, zIndex: 1100, color: 'gray' }}>
-            <button onClick={() => { logEvent("USER_PRESSED_RESET"); startFresh(); }}>Reset</button>
-          </div>
-          <div style={{ position: 'absolute', bottom: 10, right: 10, zIndex: 1100, color: 'gray', pointerEvents: 'none' }}>
-            {getTaskCode()}
-          </div>
         </div>
       );
     }
