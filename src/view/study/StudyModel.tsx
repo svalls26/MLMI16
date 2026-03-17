@@ -66,7 +66,6 @@ interface StudyModelState {
 
   // ── Second-pass review phase ──
   phase: 'first-pass' | 'second-pass';
-  showReviewScreen: boolean;
   firstPassSummary: string | null;
 }
 
@@ -125,7 +124,6 @@ const initialState: StudyModelState = {
   taskStartTime: null,
   firstInteractionLogged: false,
   phase: 'first-pass',
-  showReviewScreen: false,
   firstPassSummary: null,
 };
 
@@ -150,7 +148,7 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
 
   startFresh: () => {
     const currentStep = get().steps[get().stepId];
-    set({ phase: 'first-pass', showReviewScreen: false, firstPassSummary: null });
+    set({ phase: 'first-pass', firstPassSummary: null });
     useModelStore.getState().reset();
 
     if (currentStep?.type === 'condition' && currentStep.condition) {
@@ -324,18 +322,18 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
 
   submitForReview(content: string) {
     get().logEvent('FIRST_PASS_SUBMITTED', { content });
-    set({ firstPassSummary: content, showReviewScreen: true });
+    set({ firstPassSummary: content });
   },
 
   chooseEditFurther() {
     get().logEvent('REVIEW_EDIT_FURTHER', {});
-    set({ showReviewScreen: false, phase: 'second-pass' });
+    set({ phase: 'second-pass' });
   },
 
   finishTask(content: string) {
     get().logFinalSummarySubmitted(content);
     get().logTaskEnd(false);
-    set({ showReviewScreen: false, phase: 'first-pass', firstPassSummary: null });
+    set({ phase: 'first-pass', firstPassSummary: null });
     get().nextStep();
   },
 

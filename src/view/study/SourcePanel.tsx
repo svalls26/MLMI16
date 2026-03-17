@@ -8,7 +8,7 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export default function SourcePanel({ task }: { task: StudyTask }) {
+export default function SourcePanel({ task, onSubmit }: { task: StudyTask; onSubmit?: () => void }) {
   const stepId = useStudyModelStore((state) => state.stepId);
   const taskId = useStudyModelStore((state) => state.taskId);
   const logTaskStart = useStudyModelStore((state) => state.logTaskStart);
@@ -100,6 +100,33 @@ export default function SourcePanel({ task }: { task: StudyTask }) {
           <p key={i} style={{ marginTop: 0, marginBottom: 12 }}>{para}</p>
         ))}
       </div>
+
+      {/* ── Submit button footer ── */}
+      {onSubmit && (
+        <div style={{
+          padding: '10px 14px',
+          borderTop: '1px solid #ddd',
+          background: '#f0f0f0',
+          flexShrink: 0,
+        }}>
+          <button
+            onClick={onSubmit}
+            style={{
+              width: '100%',
+              padding: '8px 0',
+              background: '#2980b9',
+              color: 'white',
+              border: 'none',
+              borderRadius: 5,
+              fontWeight: 'bold',
+              fontSize: 13,
+              cursor: 'pointer',
+            }}
+          >
+            Submit final summary
+          </button>
+        </div>
+      )}
     </div>
   );
 }
