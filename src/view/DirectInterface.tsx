@@ -122,7 +122,7 @@ export default function DirectInterface(props: { children: React.ReactNode, left
   return <div className="App">
     <DragnDrop></DragnDrop>
     <CustomCursor></CustomCursor>
-    <div style={{ display: 'flex', height: '100vh', flexDirection: 'row', justifyContent: 'center' }} onDragOver={(e) => {
+    <div style={{ display: 'flex', height: '100%', flexDirection: 'row', justifyContent: 'center' }} onDragOver={(e) => {
       // If it hovers an element that doesnt have an id
       if (e.target instanceof HTMLDivElement && !e.target.id) {
         e.preventDefault();

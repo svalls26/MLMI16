@@ -8,7 +8,15 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export default function SourcePanel({ task, onSubmit }: { task: StudyTask; onSubmit?: () => void }) {
+export default function SourcePanel({
+  task,
+  onSubmit,
+  timerActive = true,
+}: {
+  task: StudyTask;
+  onSubmit?: () => void;
+  timerActive?: boolean;
+}) {
   const stepId = useStudyModelStore((state) => state.stepId);
   const taskId = useStudyModelStore((state) => state.taskId);
   const logTaskStart = useStudyModelStore((state) => state.logTaskStart);
@@ -20,8 +28,10 @@ export default function SourcePanel({ task, onSubmit }: { task: StudyTask; onSub
   const [timedOut, setTimedOut] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Reset and fire TASK_START whenever task/step changes
+  // Reset and fire TASK_START when task/step changes OR when timerActive flips to true
   useEffect(() => {
+    if (!timerActive) return;
+
     setSecondsLeft(totalSeconds);
     setTimedOut(false);
     logTaskStart();
@@ -38,7 +48,7 @@ export default function SourcePanel({ task, onSubmit }: { task: StudyTask; onSub
     }, 1000);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stepId, taskId, totalSeconds]);
+  }, [stepId, taskId, totalSeconds, timerActive]);
 
   const handleFirstInteraction = useCallback(() => {
     logFirstInteraction();
@@ -65,21 +75,8 @@ export default function SourcePanel({ task, onSubmit }: { task: StudyTask; onSub
       }}>
         <span style={{ fontWeight: 600, fontSize: 13, color: '#333' }}>Source document — Task {task.taskCode}</span>
         <span style={{ fontSize: 13, fontWeight: 500, color: timerColour, fontVariantNumeric: 'tabular-nums' }}>
-          {timedOut ? 'Time elapsed' : formatTime(secondsLeft)}
+          {!timerActive ? '--:--' : timedOut ? 'Time elapsed' : formatTime(secondsLeft)}
         </span>
-      </div>
-
-      {/* ── Reminder strip ── */}
-      <div style={{
-        padding: '6px 14px',
-        background: '#fef9e7',
-        borderBottom: '1px solid #e8dfa0',
-        fontSize: 12,
-        color: '#7a6400',
-        flexShrink: 0,
-      }}>
-        Your colleagues will rely on this summary instead of reading the source.
-        Please prepare it so that it's accurate, clearly written, well-structured, and ready to share — you have up to {task.timeLimitMinutes} min.
       </div>
 
       {/* ── Source document body ── */}

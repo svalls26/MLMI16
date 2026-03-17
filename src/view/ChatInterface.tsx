@@ -66,7 +66,7 @@ export default function ChatInterface(props: { leftSide?: React.ReactNode }) {
   }, [gptMessages]);
 
   return <div className="App">
-    <div style={{ display: 'flex', height: '100vh', flexDirection: 'row', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', height: '100%', flexDirection: 'row', justifyContent: 'center' }}>
       <div style={{ flexGrow: 1 }}>{props.leftSide}</div>
 
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flexGrow: 5, maxWidth: 700 }}>

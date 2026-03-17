@@ -9,6 +9,7 @@ import SourcePanel from "./SourcePanel";
 import StudyMessage from "./StudyMessage";
 import { useStudyModelStore } from "./StudyModel";
 import { StudyCondition, StudyStep, StudyTaskGenerator } from "./StudyTaskGenerator";
+import StudyTour from "./StudyTour";
 import StudyVideo from "./StudyVideo";
 import StudyWarmup from "./StudyWarmup";
 
@@ -139,6 +140,16 @@ export default function StudyInterface() {
   // ── Local modal state ─────────────────────────────────────────────────────
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState('');
+
+  // ── Tour state — reset on every condition step so each task gets its own tour
+  const [tourComplete, setTourComplete] = useState(false);
+  const tourStepRef = useRef(-1);
+  useEffect(() => {
+    if (steps[stepId]?.type === 'condition' && tourStepRef.current !== stepId) {
+      tourStepRef.current = stepId;
+      setTourComplete(false);
+    }
+  }, [stepId, steps]);
 
   // ── Previous step ref (recording lifecycle) ───────────────────────────────
   const prevStepRef = useRef<StudyStep | null>(null);
@@ -309,18 +320,42 @@ export default function StudyInterface() {
             display: 'flex', flexDirection: 'column',
             borderRight: '1px solid #ccc',
           }}>
-            <SourcePanel task={currentTask} onSubmit={handleSubmitClick} />
+            <SourcePanel task={currentTask} onSubmit={handleSubmitClick} timerActive={tourComplete} />
           </div>
 
-          {/* Right column — LLM interface (the summary lives here) */}
+          {/* Right column — yellow reminder banner + LLM interface */}
           <div
-            style={{ flex: 1, height: '100%', overflow: 'hidden' }}
+            style={{ flex: 1, height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
             onPointerEnter={handleInterfaceFocus}
           >
-            {rightInterface}
+            {/* ── Yellow instruction banner above the AI summary ── */}
+            <div style={{
+              padding: '7px 18px',
+              background: '#fef9e7',
+              borderBottom: '1px solid #e8dfa0',
+              fontSize: 12.5,
+              color: '#7a6400',
+              flexShrink: 0,
+            }}>
+              Your colleagues will rely on this summary instead of reading the source.
+              Please prepare it so that it's accurate, clearly written, well-structured, and ready to share — you have up to {currentTask.timeLimitMinutes} min.
+            </div>
+
+            {/* ── Interface fills remaining height ── */}
+            <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              {rightInterface}
+            </div>
           </div>
 
-        {/* Copy-paste modal */}
+          {/* Tour overlay — shown until participant clicks through all steps */}
+          {!tourComplete && (
+            <StudyTour
+              isDirect={!!currentStep.isDirect}
+              onComplete={() => setTourComplete(true)}
+            />
+          )}
+
+          {/* Submit modal */}
           {showModal && (
             <SubmitModal
               content={modalContent}
