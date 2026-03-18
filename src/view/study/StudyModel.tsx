@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { useModelStore } from '../../model/Model';
+import { useModelStore, MessageGPT } from '../../model/Model';
 import { downloadSessionZip } from '../../services/SessionDownloadManager';
 import { StudyStep } from './StudyTaskGenerator';
 
@@ -40,6 +40,26 @@ export interface QuestionnaireRecord {
   submittedAt: number;
 }
 
+export interface TaskConversationRecord {
+  stepId: number;
+  taskId: number;
+  taskCode: string;
+  condition: 'direct' | 'chat' | '';
+  messages: MessageGPT[];
+  finalSummary: string;
+}
+
+export interface ManipulativeBehaviorRecord {
+  stepId: number;
+  taskId: number;
+  taskCode: string;
+  condition: 'direct' | 'chat' | '';
+  textSelections: number;
+  dropsToPrompt: number;
+  undoCount: number;
+  redoCount: number;
+}
+
 // ─── Store interface ───────────────────────────────────────────────────────
 
 interface StudyModelState {
@@ -59,6 +79,14 @@ interface StudyModelState {
   timingData: TaskTimingRecord[];
   quizResults: QuizRecord[];
   questionnaireData: QuestionnaireRecord | null;
+  conversationLogs: TaskConversationRecord[];
+  manipulativeBehavior: ManipulativeBehaviorRecord[];
+
+  // ── Per-task transient counters (reset each task) ──
+  _textSelections: number;
+  _dropsToPrompt: number;
+  _undoCount: number;
+  _redoCount: number;
 
   // ── Per-task transient timing state ──
   taskStartTime: number | null;
@@ -93,6 +121,12 @@ interface StudyModelActions {
   addQuizResult: (record: Omit<QuizRecord, 'stepId' | 'taskId' | 'taskCode' | 'condition'>) => void;
   setQuestionnaireData: (data: QuestionnaireRecord) => void;
 
+  // ── Manipulative behavior counters ──
+  incrementTextSelections: () => void;
+  incrementDropsToPrompt: () => void;
+  incrementUndo: () => void;
+  incrementRedo: () => void;
+
   // ── Draft editing ──
   logDraftEdit: (content: string) => void;
   logFinalSummarySubmitted: (content: string) => void;
@@ -121,6 +155,12 @@ const initialState: StudyModelState = {
   timingData: [],
   quizResults: [],
   questionnaireData: null,
+  conversationLogs: [],
+  manipulativeBehavior: [],
+  _textSelections: 0,
+  _dropsToPrompt: 0,
+  _undoCount: 0,
+  _redoCount: 0,
   taskStartTime: null,
   firstInteractionLogged: false,
   phase: 'first-pass',
@@ -305,6 +345,24 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
     set({ questionnaireData: data });
   },
 
+  // ── Manipulative behavior counters ─────────────────────────────────────
+
+  incrementTextSelections() {
+    set((state) => ({ _textSelections: state._textSelections + 1 }));
+  },
+
+  incrementDropsToPrompt() {
+    set((state) => ({ _dropsToPrompt: state._dropsToPrompt + 1 }));
+  },
+
+  incrementUndo() {
+    set((state) => ({ _undoCount: state._undoCount + 1 }));
+  },
+
+  incrementRedo() {
+    set((state) => ({ _redoCount: state._redoCount + 1 }));
+  },
+
   // ── Draft editing actions ──────────────────────────────────────────────
 
   logDraftEdit(content: string) {
@@ -329,6 +387,39 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
 
   finishTask(content: string) {
     get().logFinalSummarySubmitted(content);
+
+    // ── Capture conversation log + final summary for this task ──
+    const conversationRecord: TaskConversationRecord = {
+      stepId: get().stepId,
+      taskId: get().taskId,
+      taskCode: get().getTaskCode(),
+      condition: get().getCondition(),
+      messages: [...useModelStore.getState().gptMessages],
+      finalSummary: content,
+    };
+    set((state) => ({
+      conversationLogs: [...state.conversationLogs, conversationRecord],
+    }));
+
+    // ── Capture manipulative behavior counts for this task ──
+    const behaviorRecord: ManipulativeBehaviorRecord = {
+      stepId: get().stepId,
+      taskId: get().taskId,
+      taskCode: get().getTaskCode(),
+      condition: get().getCondition(),
+      textSelections: get()._textSelections,
+      dropsToPrompt: get()._dropsToPrompt,
+      undoCount: get()._undoCount,
+      redoCount: get()._redoCount,
+    };
+    set((state) => ({
+      manipulativeBehavior: [...state.manipulativeBehavior, behaviorRecord],
+      _textSelections: 0,
+      _dropsToPrompt: 0,
+      _undoCount: 0,
+      _redoCount: 0,
+    }));
+
     get().logTaskEnd(false);
     set({ phase: 'first-pass', firstPassSummary: null });
     get().nextStep();
@@ -361,6 +452,8 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
       timingData: get().timingData,
       quizResults: get().quizResults,
       questionnaireData: get().questionnaireData,
+      conversationLogs: get().conversationLogs,
+      manipulativeBehavior: get().manipulativeBehavior,
     });
   },
 

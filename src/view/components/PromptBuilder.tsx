@@ -308,6 +308,7 @@ export default function PromptBuilder(props: { style?: React.CSSProperties, drag
                     const promptContent = editableContentRef?.current?.innerHTML;
                     if (promptContent) {
                       logEvent("USER_DROPPED_ENTITIES_IN_PROMPT", {insteadOf: spanTag.textContent, promptBefore: getPromptElement(), draggedEntities});
+                      useStudyModelStore.getState().incrementDropsToPrompt();
                       setHtmlContent(promptContent);
                     }
                   } else {
@@ -315,6 +316,7 @@ export default function PromptBuilder(props: { style?: React.CSSProperties, drag
                     const space = "<span data-text=' ' class='plain-text'>&nbsp;</span>"
                     const precededBySpace = editableContentRef?.current?.textContent?.match(/.*\s\s$/) !== null
                     logEvent("USER_DROPPED_ENTITIES_IN_PROMPT", {atEnd: true, promptBefore: getPromptElement(), draggedEntities});
+                    useStudyModelStore.getState().incrementDropsToPrompt();
                     setHtmlContent(htmlContent + (precededBySpace? "" : space) +  droppedHtml + space);
                   }
 
