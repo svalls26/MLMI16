@@ -65,12 +65,12 @@ export default function ChatInterface(props: { leftSide?: React.ReactNode }) {
     }
   }, [gptMessages]);
 
-  return <div className="App">
+  return <div className="App" style={{ height: '100vh' }}>
     <div style={{ display: 'flex', height: '100%', flexDirection: 'row', justifyContent: 'center' }}>
       <div style={{ flexGrow: 1 }}>{props.leftSide}</div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flexGrow: 5, maxWidth: 700 }}>
-        <div style={{ overflowY: 'scroll' }} ref={messageScrollpaneRef}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', flexGrow: 5, maxWidth: 700 }}>
+        <div style={{ overflowY: 'scroll', flex: 1, minHeight: 0 }} ref={messageScrollpaneRef}>
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
             {gptMessages.map((m, i) => (<ChatMessage key={i} message={m} />))}
           </div>
