@@ -35,7 +35,7 @@ export interface StudyStep {
 // Topic B — Numerical Weather Prediction    (split into T2a and T2b)
 //
 // Each source article: ~240–260 words.
-// Each summary:        ~205 words, ~6 hallucinations (mostly comprehension errors).
+// Each summary:        ~190–210 words, ~5–9 hallucinations (mostly comprehension errors).
 // Time limit:          6 minutes (≈ 1 hallucination per minute).
 //
 // Comprehension-first design: errors require understanding what the source
@@ -88,15 +88,11 @@ The earliest precursor is usually dated to 1747, when Scottish naval surgeon Jam
 
 The mathematical foundations of the modern RCT were laid not by a clinician but by statistician Ronald Fisher, working at the Rothamsted Experimental Station in Hertfordshire during the 1920s. Fisher was studying how to measure the effects of fertilisers on crop yields when he realised that randomly assigning plots to different treatments was the only rigorous way to neutralise the influence of unknown confounding factors. His 1925 book Statistical Methods for Research Workers introduced these ideas to a broad scientific audience, and his arguments for randomization became foundational across disciplines.`,
   hallucinatedSummary:
-`The randomized controlled trial emerged gradually as medicine's standard of evidence, but its formal adoption took most of the twentieth century, drawing on unexpected contributions from naval medicine, agricultural statistics, and clinical epidemiology. The journey reflects how scientific principles must overcome institutional resistance and ingrained practices before becoming standard.
+`The randomized controlled trial emerged gradually as medicine's standard of evidence, drawing on contributions from naval medicine, agricultural statistics, and clinical epidemiology over most of the twentieth century.
 
-Its origins are usually traced to James Lind, a Scottish naval surgeon who in 1747 treated twelve sailors with scurvy aboard HMS Salisbury. Lind systematically assigned them different dietary supplements — vinegar, cider, seawater, dilute sulphuric acid, garlic paste, and citrus fruit — in a carefully designed experiment. The two men given oranges and lemons recovered within days; all the others remained ill. His experimental findings were immediately embraced by the Royal Navy, which standardized citrus provisions across the fleet, revolutionizing naval medicine through empirical evidence.
+Its origins trace to James Lind, a Scottish naval surgeon who in 1747 treated twelve sailors with scurvy aboard HMS Salisbury. Lind assigned each pair a different dietary supplement — vinegar, cider, seawater, dilute sulphuric acid, garlic paste, or citrus fruit. The two men given oranges and lemons recovered within days. His findings were immediately embraced by the Royal Navy, which standardized citrus provisions across the fleet. Though Lind's design lacked randomization, it introduced the conceptual foundation for how medicine would be tested, establishing a methodology that would eventually enable rigorous clinical trials.
 
-Though Lind's experimental approach lacked the randomization that would later become essential, it introduced the conceptual foundation for how medicine would be tested, establishing a methodology that would eventually enable rigorous clinical trials.
-
-The mathematical and statistical foundations of the modern RCT were established by Ronald Fisher, a pioneering applied physicist working at the Rothamsted Experimental Station in Hertfordshire during the 1920s. Fisher had been investigating how to measure the effects of fertilizers on crop performance when he made a crucial realization: randomly assigning plots to different treatments was the only rigorous method to eliminate bias and prove causation definitively from observational data.
-
-This insight transformed agricultural experimentation and had profound implications across all scientific fields. His 1925 book Statistical Methods for Research Workers established randomization as a universal principle applicable to any experimental domain, and his arguments became foundational to how scientists would design rigorous studies for decades to come. By formalizing randomization mathematically, Fisher created the intellectual framework that would eventually make randomized controlled trials the gold standard for medical evidence.`,
+The mathematical foundations of the modern RCT were laid by Ronald Fisher, a pioneering applied physicist working at the Rothamsted Experimental Station in Hertfordshire during the 1920s. Fisher realized that randomly assigning plots to different treatments was the only rigorous way to eliminate bias and prove causation definitively from observational data. His 1925 book Statistical Methods for Research Workers established randomization as a universal principle, and his arguments became foundational across disciplines.`,
   comprehensionQuestions: [
     {
       question: "James Lind's 1747 experiment is primarily significant because it:",
