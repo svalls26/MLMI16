@@ -5,6 +5,7 @@ import TextualEntity from "../entities/TextualEntity";
 import { useModelStore } from "../../model/Model";
 import { recordingService } from "../../services/RecordingService";
 import CognitiveEffortQuestionnaire from "./CognitiveEffortQuestionnaire";
+import ComprehensionQuiz from "./ComprehensionQuiz";
 import SourcePanel from "./SourcePanel";
 import StudyMessage from "./StudyMessage";
 import { useStudyModelStore } from "./StudyModel";
@@ -20,11 +21,12 @@ const IDLE_THRESHOLD_MS = 30_000; // 30 seconds
 interface SubmitModalProps {
   content: string;
   phase: 'first-pass' | 'second-pass';
+  timedOut: boolean;
   onEditFurther: () => void;
   onFinish: () => void;
 }
 
-function SubmitModal({ content, phase, onEditFurther, onFinish }: SubmitModalProps) {
+function SubmitModal({ content, phase, timedOut, onEditFurther, onFinish }: SubmitModalProps) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000,
@@ -44,12 +46,18 @@ function SubmitModal({ content, phase, onEditFurther, onFinish }: SubmitModalPro
       }}>
 
         {/* Header */}
-        <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid #eee' }}>
+        <div style={{
+          padding: '16px 20px 12px',
+          borderBottom: '1px solid #eee',
+          background: timedOut ? '#fff8f0' : '#fff',
+        }}>
           <div style={{ fontWeight: 700, fontSize: 16, color: '#222', marginBottom: 4 }}>
-            Your final summary
+            {timedOut ? 'Time is up' : 'Your final summary'}
           </div>
-          <div style={{ fontSize: 13, color: '#666' }}>
-            Review your summary below. You can copy it, or go back to keep editing.
+          <div style={{ fontSize: 13, color: timedOut ? '#b7580d' : '#666' }}>
+            {timedOut
+              ? 'Your time has elapsed. Your current summary has been submitted automatically — you cannot go back to editing.'
+              : 'Review your summary below. You can copy it, or go back to keep editing.'}
           </div>
         </div>
 
@@ -81,7 +89,8 @@ function SubmitModal({ content, phase, onEditFurther, onFinish }: SubmitModalPro
           justifyContent: 'flex-end',
           gap: 10,
         }}>
-          <button
+          {!timedOut && (
+            <button
               onClick={onEditFurther}
               style={{
                 padding: '8px 18px',
@@ -96,6 +105,7 @@ function SubmitModal({ content, phase, onEditFurther, onFinish }: SubmitModalPro
             >
               Edit further
             </button>
+          )}
           <button
             onClick={onFinish}
             style={{
@@ -109,7 +119,7 @@ function SubmitModal({ content, phase, onEditFurther, onFinish }: SubmitModalPro
               cursor: 'pointer',
             }}
           >
-            Done — finish task
+            {timedOut ? 'Continue to questions' : 'Done — finish task'}
           </button>
         </div>
       </div>
@@ -137,9 +147,12 @@ export default function StudyInterface() {
   const chooseEditFurther = useStudyModelStore((state) => state.chooseEditFurther);
   const finishTask = useStudyModelStore((state) => state.finishTask);
 
-  // ── Local modal state ─────────────────────────────────────────────────────
+  // ── Local modal / quiz state ──────────────────────────────────────────────
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState('');
+  const [isTimedOut, setIsTimedOut] = useState(false);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizContent, setQuizContent] = useState('');
 
   // ── Tour state — shown only for the first task of each interface type
   const [tourComplete, setTourComplete] = useState(false);
@@ -237,6 +250,16 @@ export default function StudyInterface() {
     const content = useModelStore.getState().getLastGptMessage().content;
     submitForReview(content);
     setModalContent(content);
+    setIsTimedOut(false);
+    setShowModal(true);
+  }, [submitForReview]);
+
+  // ── Auto-submit when timer expires ────────────────────────────────────────
+  const handleTimedOut = useCallback(() => {
+    const content = useModelStore.getState().getLastGptMessage().content;
+    submitForReview(content);
+    setModalContent(content);
+    setIsTimedOut(true);
     setShowModal(true);
   }, [submitForReview]);
 
@@ -248,8 +271,16 @@ export default function StudyInterface() {
 
   const handleModalFinish = useCallback(() => {
     setShowModal(false);
-    finishTask(modalContent);
-  }, [finishTask, modalContent]);
+    setQuizContent(modalContent);
+    setShowQuiz(true);
+  }, [modalContent]);
+
+  // ── Quiz completion: record answers then advance task ─────────────────────
+  const handleQuizComplete = useCallback(() => {
+    setShowQuiz(false);
+    setIsTimedOut(false);
+    finishTask(quizContent);
+  }, [finishTask, quizContent]);
 
   // ──────────────────────────────────────────────────────────────────────────
 
@@ -324,7 +355,12 @@ export default function StudyInterface() {
             display: 'flex', flexDirection: 'column',
             borderRight: '1px solid #ccc',
           }}>
-            <SourcePanel task={currentTask} onSubmit={handleSubmitClick} timerActive={tourComplete} />
+            <SourcePanel
+              task={currentTask}
+              onSubmit={handleSubmitClick}
+              onTimedOut={handleTimedOut}
+              timerActive={tourComplete}
+            />
           </div>
 
           {/* Right column — yellow reminder banner + LLM interface */}
@@ -343,7 +379,7 @@ export default function StudyInterface() {
             }}>
               {currentStep.isDirect
                 ? <>This panel shows the AI-generated summary — the current state of the document as modified through your prompts. Edit it using the prompt bar below. When ready, click <b>Submit final summary</b>: this opens a review panel showing the current document content for a final check before finishing. You have up to {currentTask.timeLimitMinutes} min.</>
-                : <>This panel shows the AI-generated summary — the last message produced in the chat. Send prompts below to refine it. When ready, click <b>Submit final summary</b>: this opens a review panel showing the last message generated in the chat for a final check before finishing. You have up to {currentTask.timeLimitMinutes} min.</>
+                : <>This panel shows the AI-generated summary. Send prompts below to refine it. When ready, click <b>Submit final summary</b>. You have up to {currentTask.timeLimitMinutes} min.</>
               }
             </div>
 
@@ -370,8 +406,18 @@ export default function StudyInterface() {
             <SubmitModal
               content={modalContent}
               phase={phase}
+              timedOut={isTimedOut}
               onEditFurther={handleModalEditFurther}
               onFinish={handleModalFinish}
+            />
+          )}
+
+          {/* Comprehension quiz — shown after submission, blocks return to editing */}
+          {showQuiz && (
+            <ComprehensionQuiz
+              taskCode={currentTask.taskCode}
+              questions={currentTask.comprehensionQuestions}
+              onComplete={handleQuizComplete}
             />
           )}
         </div>
