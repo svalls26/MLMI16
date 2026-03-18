@@ -11,10 +11,13 @@ function formatTime(seconds: number): string {
 export default function SourcePanel({
   task,
   onSubmit,
+  onTimedOut,
   timerActive = true,
 }: {
   task: StudyTask;
   onSubmit?: () => void;
+  /** Called automatically when the countdown reaches zero. */
+  onTimedOut?: () => void;
   timerActive?: boolean;
 }) {
   const stepId = useStudyModelStore((state) => state.stepId);
@@ -49,6 +52,14 @@ export default function SourcePanel({
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepId, taskId, totalSeconds, timerActive]);
+
+  // When timer runs out, trigger automatic submission
+  useEffect(() => {
+    if (timedOut && onTimedOut) {
+      onTimedOut();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timedOut]);
 
   const handleFirstInteraction = useCallback(() => {
     logFirstInteraction();
