@@ -75,7 +75,6 @@ export default function ComprehensionQuiz({ taskCode, questions, onComplete }: C
           </div>
           <div style={{ fontSize: 13, color: '#555', lineHeight: 1.5 }}>
             Before continuing, please answer the questions below about what you read.
-            Work from memory — do not refer back to the source.
           </div>
         </div>
 
