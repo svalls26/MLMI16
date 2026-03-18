@@ -50,7 +50,7 @@ export default function ComprehensionQuiz({ taskCode, questions, onComplete }: C
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 1100,
+      height: '100vh',
       background: '#f4f5f7',
       display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
       overflowY: 'auto',
