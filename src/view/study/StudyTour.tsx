@@ -49,8 +49,8 @@ function buildSteps(isDirect: boolean): TourStep[] {
       body:
         'The toolbar at the top of the document lets you step backwards and forwards through every change made by the model. ' +
         'Use Undo if you want to revert a prompt result, and Redo to reapply it.',
-      highlight: { left: '38%', top: '0', width: '62%', height: '44px' },
-      tooltip: { left: '39%', top: '56px' },
+      highlight: { left: '38%', top: '55px', width: '62%', height: '32px' },
+      tooltip: { left: '39%', top: '100px' },
     }] : []),
     {
       title: 'Submit final summary',
