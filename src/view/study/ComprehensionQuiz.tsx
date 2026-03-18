@@ -51,10 +51,10 @@ export default function ComprehensionQuiz({ taskCode, questions, onComplete }: C
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1100,
-      background: 'rgba(0,0,0,0.55)',
+      background: '#f4f5f7',
       display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
       overflowY: 'auto',
-      padding: '32px 16px',
+      padding: '40px 16px 48px',
     }}>
       <div style={{
         background: '#fff',
@@ -67,12 +67,15 @@ export default function ComprehensionQuiz({ taskCode, questions, onComplete }: C
 
         {/* ── Header ── */}
         <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+            Task {taskCode} — Step 2 of 2
+          </div>
           <div style={{ fontWeight: 700, fontSize: 17, color: '#222', marginBottom: 6 }}>
-            Comprehension check — Task {taskCode}
+            Comprehension check
           </div>
           <div style={{ fontSize: 13, color: '#555', lineHeight: 1.5 }}>
             Before continuing, please answer the questions below about what you read.
-            Use your memory — do not refer back to the source.
+            Work from memory — do not refer back to the source.
           </div>
         </div>
 
