@@ -38,13 +38,20 @@ function buildSteps(isDirect: boolean): TourStep[] {
       title: isDirect ? 'DirectGPT — AI-generated summary' : 'ChatGPT — AI-generated summary',
       body: isDirect
         ? 'The AI has already drafted a summary for you. ' +
-          'Select any text in it and type a prompt below to ask the model to correct, rewrite, or expand that part. ' +
-          'Use Undo / Redo to step back through changes.'
+          'Select any text in it and type a prompt below to ask the model to correct, rewrite, or expand that part.'
         : 'The AI has already drafted a summary for you. ' +
           'Use the chat as you would normally do.',
       highlight: { left: '38%', top: '0', width: '62%', height: '100%' },
       tooltip: { left: '39%', top: '50%', transform: 'translateY(-50%)' },
     },
+    ...(isDirect ? [{
+      title: 'Undo & Redo',
+      body:
+        'The toolbar at the top of the document lets you step backwards and forwards through every change made by the model. ' +
+        'Use Undo if you want to revert a prompt result, and Redo to reapply it.',
+      highlight: { left: '38%', top: '0', width: '62%', height: '44px' },
+      tooltip: { left: '39%', top: '56px' },
+    }] : []),
     {
       title: 'Submit final summary',
       body:
