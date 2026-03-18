@@ -31,17 +31,18 @@ export interface StudyStep {
 // Each summary: ~140–160 words, 2 hallucinations across two difficulty tiers.
 //
 // Hallucination map:
-//   T1a  H1 Tier 2  "sixteen sailors"           should be "twelve sailors"
-//   T1a  H2 Tier 2  "1935 book"                 should be "1925 book"
+//   T1a  H4 Tier 3  "fourteen sailors"            should be "twelve sailors"
+//   T1a  H2 Tier 2  "1935 book"                  should be "1925 book"
 //
 //   T1b  H1 Tier 1  "British Medical Association" should be "Medical Research Council"
-//   T1b  H2 Tier 2  "eleven criteria"            should be "nine criteria"
+//   T1b  H3 Tier 2  "ten criteria"               should be "nine criteria"
 //
 //   T2a  H1 Tier 1  "640,000 human computers"    should be "64,000"
 //   T2a  H2 Tier 2  "physicist"                  should be "mathematician"
 //
-//   T2b  H1 Tier 1  "established in 1965"        should be "1975" (ECMWF)
-//   T2b  H2 Tier 3  "1962 paper"                 should be "1963 paper" (Lorenz)
+//   T2b  H3 Tier 2  "Journal of Meteorology"     should be "Tellus"
+//   T2b  H2 Tier 2  "established in 1965"        should be "1975" (ECMWF)
+//   T2b  H4 Tier 3  "1962 paper"                 should be "1963 paper" (Lorenz)
 
 // ── TASK T1a — The RCT: Origins and Statistical Foundations ──────────────────
 
@@ -55,11 +56,11 @@ The earliest precursor is usually dated to 1747, when Scottish naval surgeon Jam
 
 The mathematical foundations of the modern RCT were laid not by a clinician but by statistician Ronald Fisher, working at the Rothamsted Experimental Station in Hertfordshire during the 1920s. Fisher was studying how to measure the effects of fertilisers on crop yields when he realised that randomly assigning plots to different treatments was the only rigorous way to neutralise the influence of unknown confounding factors. His 1925 book Statistical Methods for Research Workers introduced these ideas to a broad scientific audience, and his arguments for randomization became foundational across disciplines.`,
   hallucinatedSummary:
-`The randomized controlled trial was not invented at a single moment but assembled across centuries from contributions in military medicine, agricultural science, and epidemiology.
+`The randomized controlled trial emerged gradually as medicine's standard of evidence, taking centuries of improvised experimentation to become the regulatory requirement it is today.
 
-Its earliest antecedent is usually traced to 1747, when Scottish naval surgeon James Lind treated sixteen sailors suffering from scurvy aboard HMS Salisbury. He divided them into six pairs and assigned each a different dietary supplement; only the pair given citrus fruit recovered. Although Lind's design lacked randomization, it established the logic of simultaneous comparison that would underpin all later controlled experiments.
+Its origins are usually traced to James Lind, a Scottish naval surgeon who in 1747 recruited fourteen sailors with scurvy and assigned each of six pairs a different dietary supplement. The pair given citrus fruit recovered within days; none of the others did. Though Lind's design lacked randomization, it introduced the logic of simultaneous comparison that would prove foundational to later experimental medicine.
 
-The statistical architecture of the modern RCT was built by Ronald Fisher at the Rothamsted Experimental Station in Hertfordshire during the 1920s. Working on agricultural field experiments, Fisher recognized that randomly assigning plots to different treatments was the only reliable way to remove the influence of unknown confounding factors. His 1935 book Statistical Methods for Research Workers formalized these principles and spread them across scientific disciplines.`,
+The statistical foundations were laid by Ronald Fisher, drawing on his work in agricultural field trials during the 1920s, who argued in his 1935 book Statistical Methods for Research Workers that randomly assigning subjects to treatment and control groups was the only reliable way to control for unknown confounding factors.`,
 };
 
 // ── TASK T1b — The RCT: Clinical Adoption and Regulation ─────────────────────
@@ -76,11 +77,11 @@ The regulatory dimension followed a disaster. When thalidomide, prescribed for m
 
 The Cochrane Collaboration, established in 1993 in Oxford, formalized this infrastructure by systematically aggregating RCT evidence from across medical specialties into reviews that now inform clinical guidelines worldwide.`,
   hallucinatedSummary:
-`The first properly randomized clinical trial was conducted in 1948 by Austin Bradford Hill, who tested streptomycin against pulmonary tuberculosis. The study, organized under the British Medical Association, used sealed random envelopes to assign patients to the drug or to standard bed rest. Its results were decisive: streptomycin worked, and the trial demonstrated that clinical questions could be settled by method rather than expert judgment alone.
+`The clinical translation came in 1948, when Austin Bradford Hill designed a trial of streptomycin for pulmonary tuberculosis, conducted under the auspices of the British Medical Association. Using sealed random envelopes, the trial demonstrated that streptomycin significantly improved outcomes and that rigorous methodology could settle clinical disputes once decided by authority alone.
 
-Bradford Hill extended this work in 1965 by publishing eleven criteria for inferring causation from a statistical association — covering strength of association, consistency, biological plausibility, and related considerations. These Bradford Hill criteria became a canonical reference in epidemiology, applied to debates from tobacco and lung cancer to hormone replacement therapy.
+Bradford Hill later published, in 1965, ten criteria for judging whether a statistical association could be considered causal — a framework that remains a standard reference in epidemiology, shaping debates from the tobacco-cancer link to evaluations of hormone therapy.
 
-The thalidomide disaster of the early 1960s provided regulatory momentum: the FDA responded by requiring randomized trial evidence for all new drug approvals. The Cochrane Collaboration, founded in Oxford in 1993, later formalized the evidence base by aggregating RCT findings across medical specialties into systematic reviews used to shape clinical guidelines worldwide.`,
+The thalidomide disaster of the early 1960s provided regulatory momentum: the FDA responded by requiring randomized trial evidence for all new drug approvals. The Cochrane Collaboration, established in Oxford in 1993, formalized this infrastructure by systematically compiling RCT evidence into reviews that now inform clinical guidelines worldwide.`,
 };
 
 // ── TASK T2a — Numerical Weather Prediction: Early Theory ────────────────────
@@ -110,11 +111,11 @@ Progress accelerated as computing power grew. The European Centre for Medium-Ran
 
 A further refinement came from recognising that small measurement uncertainties grow unpredictably as forecasts extend in time. Edward Lorenz had described the theoretical basis for this in his influential 1963 paper on deterministic chaos, showing that tiny initial differences in complex dynamic systems diverge exponentially. Rather than producing a single best estimate, meteorologists began running multiple simulations from slightly different starting conditions. ECMWF and the United States National Centers for Environmental Prediction both introduced operational ensemble forecasting in 1992, enabling forecasters to communicate not just a prediction but its associated uncertainty.`,
   hallucinatedSummary:
-`The breakthrough that made numerical forecasting practical came in 1950, when Jule Charney's team at Princeton's Institute for Advanced Study ran four twenty-four-hour simulations on ENIAC — one of the first programmable electronic computers. The results were published in the journal Tellus. Though each simulation took around 24 hours of machine time, the exercise proved that the approach was viable.
+`The first successful numerical forecast was produced in March 1950, when Jule Charney's team at Princeton's Institute for Advanced Study ran four twenty-four-hour simulations on ENIAC. The results were published in the Journal of Meteorology, and although each simulation took around 24 hours of machine time, the proof of concept was established.
 
-Progress followed computing power. The European Centre for Medium-Range Weather Forecasts, established in 1965 in Reading, United Kingdom, was designed expressly to extend skillful forecasts beyond the two-day horizon; by the mid-1980s, its global model was reliably producing five-day predictions.
+The European Centre for Medium-Range Weather Forecasts, established in 1965 in Reading, United Kingdom, was purpose-built to extend forecast skill beyond the two-day barrier; by the mid-1980s, its global model delivered reliable five-day predictions.
 
-Theoretical constraints on forecast accuracy had been established by Edward Lorenz, whose 1962 paper on deterministic chaos demonstrated that tiny differences in initial conditions diverge exponentially in complex dynamic systems. To handle this irreducible uncertainty, both ECMWF and the US National Centers for Environmental Prediction introduced operational ensemble forecasting in 1992, running multiple simulations from slightly varied starting states to generate probabilistic predictions.`,
+The theoretical ceiling on forecasting was formalised by Edward Lorenz, whose 1962 paper on deterministic chaos showed that small initial measurement errors grow rapidly in complex systems. To manage this uncertainty, both ECMWF and the United States National Centers for Environmental Prediction introduced operational ensemble forecasting in 1992, generating multiple simulations from varied starting conditions to produce probabilistic predictions.`,
 };
 
 // ─── Step generator ──────────────────────────────────────────────────────────
