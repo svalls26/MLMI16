@@ -338,6 +338,17 @@ export default function StudyInterface() {
       const condition = currentStep.condition as StudyCondition;
       const currentTask = condition.task;
 
+      // ── Comprehension quiz replaces the task UI entirely ─────────────────
+      if (showQuiz) {
+        return (
+          <ComprehensionQuiz
+            taskCode={currentTask.taskCode}
+            questions={currentTask.comprehensionQuestions}
+            onComplete={handleQuizComplete}
+          />
+        );
+      }
+
       // Right panel: Direct (TextualEntity is the summary) or Chat (last message is the summary)
       const rightInterface = currentStep.isDirect
         ? <DirectInterface><TextualEntity /></DirectInterface>
@@ -412,14 +423,6 @@ export default function StudyInterface() {
             />
           )}
 
-          {/* Comprehension quiz — shown after submission, blocks return to editing */}
-          {showQuiz && (
-            <ComprehensionQuiz
-              taskCode={currentTask.taskCode}
-              questions={currentTask.comprehensionQuestions}
-              onComplete={handleQuizComplete}
-            />
-          )}
         </div>
       );
     }
