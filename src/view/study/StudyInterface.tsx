@@ -343,7 +343,7 @@ export default function StudyInterface() {
             }}>
               {currentStep.isDirect
                 ? <>This panel shows the AI-generated summary — the current state of the document as modified through your prompts. Edit it using the prompt bar below. When ready, click <b>Submit final summary</b>: this opens a review panel showing the current document content for a final check before finishing. You have up to {currentTask.timeLimitMinutes} min.</>
-                : <>This panel shows the AI-generated summary — the last message produced in the chat. Send prompts below to refine it. When ready, click <b>Submit final summary</b>: this opens a review panel showing the last message generated in the chat for a final check before finishing. You have up to {currentTask.timeLimitMinutes} min.</>
+                : <>This panel shows the AI-generated summary. Send prompts below to refine it. When ready, click <b>Submit final summary</b>. You have up to {currentTask.timeLimitMinutes} min.</>
               }
             </div>
 
