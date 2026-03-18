@@ -14,15 +14,19 @@
 //   │   └── P{id}_quiz_results.json
 //   ├── questionnaire/
 //   │   └── P{id}_cognitive_offloading.json
-//   └── recordings/
-//       ├── P{id}_block1_audio.webm
-//       ├── P{id}_block1_screen.webm
-//       ├── P{id}_block2_audio.webm
-//       └── P{id}_block2_screen.webm
+//   ├── conversations/
+//   │   └── P{id}_conversations.json
+//   └── manipulative_behavior/
+//       └── P{id}_manipulative_behavior.json
 
 import JSZip from 'jszip';
-import { recordingService } from './RecordingService';
-import type { TaskTimingRecord, QuizRecord, QuestionnaireRecord } from '../view/study/StudyModel';
+import type {
+  TaskTimingRecord,
+  QuizRecord,
+  QuestionnaireRecord,
+  TaskConversationRecord,
+  ManipulativeBehaviorRecord,
+} from '../view/study/StudyModel';
 
 export interface SessionData {
   participantId: number;
@@ -30,6 +34,8 @@ export interface SessionData {
   timingData: TaskTimingRecord[];
   quizResults: QuizRecord[];
   questionnaireData: QuestionnaireRecord | null;
+  conversationLogs: TaskConversationRecord[];
+  manipulativeBehavior: ManipulativeBehaviorRecord[];
 }
 
 export async function downloadSessionZip(data: SessionData): Promise<void> {
@@ -50,13 +56,6 @@ export async function downloadSessionZip(data: SessionData): Promise<void> {
         platform: navigator.platform,
         totalBlocks: data.csvBlocks.length,
         totalTasks: data.timingData.length,
-        recordingsAvailable: recordingService
-          .getCompletedBlocks()
-          .map((b) => ({
-            block: b.blockLabel,
-            hasAudio: b.audioBlob !== null,
-            hasScreen: b.screenBlob !== null,
-          })),
       },
       null,
       2,
@@ -88,14 +87,20 @@ export async function downloadSessionZip(data: SessionData): Promise<void> {
     );
   }
 
-  // ── Media recordings ──
-  for (const block of recordingService.getCompletedBlocks()) {
-    if (block.audioBlob) {
-      zip.file(`${root}/recordings/${block.blockLabel}_audio.webm`, block.audioBlob);
-    }
-    if (block.screenBlob) {
-      zip.file(`${root}/recordings/${block.blockLabel}_screen.webm`, block.screenBlob);
-    }
+  // ── Conversation logs (chat messages + final summary per task) ──
+  if (data.conversationLogs.length > 0) {
+    zip.file(
+      `${root}/conversations/P${pid}_conversations.json`,
+      JSON.stringify(data.conversationLogs, null, 2),
+    );
+  }
+
+  // ── Manipulative behavior (DirectGPT: selections, drops, undo/redo) ──
+  if (data.manipulativeBehavior.length > 0) {
+    zip.file(
+      `${root}/manipulative_behavior/P${pid}_manipulative_behavior.json`,
+      JSON.stringify(data.manipulativeBehavior, null, 2),
+    );
   }
 
   // ── Generate & trigger download ──

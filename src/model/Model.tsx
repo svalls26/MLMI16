@@ -123,7 +123,10 @@ export const useModelStore = create<ModelState & ModelAction>()((set, get) => ({
       // Make sure there are no duplicated elements by checking the textRepresentation
       const uniqueElements = selectedElements.filter((e, i) => selectedElements.findIndex((e2) => e2.x === e.x && e2.y === e.y) === i);
       const logEvent = useStudyModelStore.getState().logEvent;
-      if (uniqueElements.length !== selectedElements.length || uniqueElements.length > 0) logEvent("ELEMENTS_SELECTED", { elements: uniqueElements });
+      if (uniqueElements.length !== selectedElements.length || uniqueElements.length > 0) {
+        logEvent("ELEMENTS_SELECTED", { elements: uniqueElements });
+        useStudyModelStore.getState().incrementTextSelections();
+      }
       return { selectedElements: uniqueElements }
     }),
   setLoadingElements: (loadingElements) => set((state) => ({ loadingElements: loadingElements })),
@@ -136,6 +139,7 @@ export const useModelStore = create<ModelState & ModelAction>()((set, get) => ({
       const last = state.history[state.history.length - 1];
       const logEvent = useStudyModelStore.getState().logEvent;
       logEvent("UNDO", { restoredHistory: last });
+      useStudyModelStore.getState().incrementUndo();
       return {
         inMultipleSelectionMode: false,
         selectedTool: '',
@@ -155,6 +159,7 @@ export const useModelStore = create<ModelState & ModelAction>()((set, get) => ({
       const last = state.redoStack[state.redoStack.length - 1];
       const logEvent = useStudyModelStore.getState().logEvent;
       logEvent("REDO", { restoredHistory: last });
+      useStudyModelStore.getState().incrementRedo();
       return {
         inMultipleSelectionMode: false,
         selectedTool: '',

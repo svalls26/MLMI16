@@ -3,7 +3,6 @@ import ChatInterface from "../ChatInterface";
 import DirectInterface from "../DirectInterface";
 import TextualEntity from "../entities/TextualEntity";
 import { useModelStore } from "../../model/Model";
-import { recordingService } from "../../services/RecordingService";
 import CognitiveEffortQuestionnaire from "./CognitiveEffortQuestionnaire";
 import ComprehensionQuiz from "./ComprehensionQuiz";
 import SourcePanel from "./SourcePanel";
@@ -206,19 +205,7 @@ export default function StudyInterface() {
   const dataSaved = params.get('dataSaved');
   const launchedFromLauncher = dataSaved === "true";
 
-  // ── Acquire recording streams once after consent ──────────────────────────
-  const streamsAcquiredRef = useRef(false);
-  useEffect(() => {
-    if (isDataSaved && !streamsAcquiredRef.current) {
-      streamsAcquiredRef.current = true;
-      recordingService.acquireStreams().then(({ audioOk, screenOk }) => {
-        logEvent('STREAMS_ACQUIRED', { audioOk, screenOk });
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDataSaved]);
-
-  // ── Recording lifecycle ────────────────────────────────────────────────────
+  // ── Block lifecycle (save CSV when leaving a condition block) ────────────
   useEffect(() => {
     const currentStep = steps[stepId];
     const prevStep = prevStepRef.current;
@@ -229,16 +216,7 @@ export default function StudyInterface() {
     }
 
     if (prevStep?.type === 'condition' && currentStep?.type !== 'condition') {
-      recordingService.stopBlock().then(() => {
-        logEvent('RECORDING_STOPPED', { stepId: prevStep });
-      });
       useStudyModelStore.getState().saveData(true);
-    }
-
-    if (currentStep?.type === 'condition' && prevStep?.type !== 'condition') {
-      const blockLabel = `P${participantId}_block${stepId}`;
-      const { audioOk, screenOk } = recordingService.startBlock(blockLabel);
-      logEvent('RECORDING_STARTED', { blockLabel, audioOk, screenOk });
     }
 
     prevStepRef.current = currentStep ?? null;
