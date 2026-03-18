@@ -141,13 +141,17 @@ export default function StudyInterface() {
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState('');
 
-  // ── Tour state — reset on every condition step so each task gets its own tour
+  // ── Tour state — shown only for the first task of each interface type
   const [tourComplete, setTourComplete] = useState(false);
+  const tourShownRef = useRef<{ direct: boolean; chat: boolean }>({ direct: false, chat: false });
   const tourStepRef = useRef(-1);
   useEffect(() => {
-    if (steps[stepId]?.type === 'condition' && tourStepRef.current !== stepId) {
+    const step = steps[stepId];
+    if (step?.type === 'condition' && tourStepRef.current !== stepId) {
       tourStepRef.current = stepId;
-      setTourComplete(false);
+      const iface = step.isDirect ? 'direct' : 'chat';
+      // Skip tour if this interface type has already been introduced
+      setTourComplete(tourShownRef.current[iface]);
     }
   }, [stepId, steps]);
 
@@ -353,7 +357,11 @@ export default function StudyInterface() {
           {!tourComplete && (
             <StudyTour
               isDirect={!!currentStep.isDirect}
-              onComplete={() => setTourComplete(true)}
+              onComplete={() => {
+                const iface = currentStep.isDirect ? 'direct' : 'chat';
+                tourShownRef.current[iface] = true;
+                setTourComplete(true);
+              }}
             />
           )}
 
