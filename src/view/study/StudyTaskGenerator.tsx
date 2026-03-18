@@ -35,37 +35,46 @@ export interface StudyStep {
 // Topic B — Numerical Weather Prediction    (split into T2a and T2b)
 //
 // Each source article: ~240–260 words.
-// Each summary:        ~200–215 words, 6 hallucinations (1 Tier 1 / 2 Tier 2 / 3 Tier 3).
+// Each summary:        ~205 words, ~6 hallucinations (mostly comprehension errors).
 // Time limit:          6 minutes (≈ 1 hallucination per minute).
 //
+// Comprehension-first design: errors require understanding what the source
+// actually claims, not just surface-level fact-checking.
+//
 // Hallucination map:
-//   T1a  H1 Tier 1  "HMS Victory"                should be "HMS Salisbury"
-//   T1a  H2 Tier 2  "five pairs"                 should be "six pairs"
-//   T1a  H3 Tier 2  "1935 book"                  should be "1925 book"
-//   T1a  H4 Tier 3  "fourteen sailors"            should be "twelve sailors"
-//   T1a  H5 Tier 3  "Cambridgeshire"             should be "Hertfordshire"
-//   T1a  H6 Tier 3  "crop rotation"              should be "crop yields"
+//   T1a  H1 Tier 1  "immediately embraced by the Royal Navy"           — invented adoption not in source
+//   T1a  H2 Tier 2  "conceptual foundation for how medicine would be tested" — should be "principle of simultaneous comparison"
+//   T1a  H3 Tier 3  "pioneering applied physicist"                     — should be "statistician"
+//   T1a  H4 Tier 3  "prove causation definitively"                     — should be "neutralise unknown confounding factors"
+//   T1a  H5 Tier 3  "established randomization as a universal principle" — should be "arguments became foundational across disciplines"
 //
-//   T1b  H1 Tier 1  "British Medical Association" should be "Medical Research Council"
-//   T1b  H2 Tier 2  "Cambridge"                  should be "Oxford" (Cochrane location)
-//   T1b  H3 Tier 2  "ten criteria"               should be "nine criteria"
-//   T1b  H4 Tier 3  "miliary tuberculosis"        should be "pulmonary tuberculosis"
-//   T1b  H5 Tier 3  "1964"                        should be "1965" (Bradford Hill criteria)
-//   T1b  H6 Tier 3  "1991"                        should be "1993" (Cochrane founding year)
+//   T1b  H1 Tier 1  "British Medical Association"                      — should be "Medical Research Council"
+//   T1b  H2 Tier 2  "eight criteria"                                   — should be "nine criteria"
+//   T1b  H3 Tier 2  "Cambridge" (Cochrane)                             — should be "Oxford"
+//   T1b  H4 Tier 3  "miliary tuberculosis"                             — should be "pulmonary tuberculosis"
+//   T1b  H5 Tier 3  "universal cure for all tuberculosis patients"     — should be "significantly improved outcomes"
+//   T1b  H6 Tier 3  "evidence of causation"                            — should be "judged as causal"
+//   T1b  H7 Tier 3  "definitively resolved the question"               — source says "remain a standard reference" (ongoing)
+//   T1b  H8 Tier 3  "immediately eliminating reliance on…"             — source says "mandate randomized evidence" (not eliminate old)
+//   T1b  H9 Tier 3  "single authoritative database"                    — should be "reviews" (Cochrane produces reviews, not a database)
 //
-//   T2a  H1 Tier 1  "640,000 human computers"    should be "64,000"
-//   T2a  H2 Tier 2  "physicist"                  should be "mathematician"
-//   T2a  H3 Tier 2  "eight weeks"                should be "six weeks"
-//   T2a  H4 Tier 3  "1923 book"                  should be "1922 book"
-//   T2a  H5 Tier 3  "humidity"                   should be "pressure"
-//   T2a  H6 Tier 3  "three days"                 should be "a day or two"
+//   T2a  H1 Tier 1  "640,000 human computers"                         — should be "64,000"
+//   T2a  H2 Tier 2  "three days"                                       — should be "a day or two"
+//   T2a  H3 Tier 3  "humidity"                                         — should be "pressure" (wrong meteorological variable)
+//   T2a  H4 Tier 3  "empirical and systematic"                         — should be "systematic but subjective"
+//   T2a  H5 Tier 3  "physicist"                                        — should be "mathematician"
+//   T2a  H6 Tier 3  "mathematical calculation"                         — should be "hydrodynamic equations"
+//   T2a  H7 Tier 3  "fundamentally flawed and unsuitable"              — source implies equations were valid, implementation impractical
+//   T2a  H8 Tier 3  "reductio ad absurdum proving…"                    — source says "fantasy, but the equations…were real" (not proof of impossibility)
 //
-//   T2b  H1 Tier 1  "Alan Turing"                should be "John von Neumann"
-//   T2b  H2 Tier 2  "established in 1965"        should be "1975" (ECMWF)
-//   T2b  H3 Tier 2  "Journal of Meteorology"     should be "Tellus"
-//   T2b  H4 Tier 3  "1962 paper"                 should be "1963 paper" (Lorenz)
-//   T2b  H5 Tier 3  "January 1950"               should be "March 1950"
-//   T2b  H6 Tier 3  "seven-day predictions"       should be "five-day predictions"
+//   T2b  H1 Tier 1  "Alan Turing"                                      — should be "John von Neumann"
+//   T2b  H2 Tier 3  "complete mathematical model"                      — should be "simplified equations"
+//   T2b  H3 Tier 3  "definitive future of meteorology"                 — source shows proof of concept, not definitive future
+//   T2b  H4 Tier 3  "achieved reliable five-day forecasts"             — should be "could produce useful forecasts out to about five days"
+//   T2b  H5 Tier 3  "scientific justification"                         — should be "theoretical basis" (separate facts, not justification)
+//   T2b  H6 Tier 3  "theoretically impossible"                         — source says errors "diverge exponentially" (not impossibility claim)
+//   T2b  H7 Tier 3  "probabilistic ensemble forecasting"               — should be "operational ensemble forecasting"
+//   T2b  H8 Tier 3  "probability distributions rather than single forecasts" — not stated in source
 
 // ── TASK T1a — The RCT: Origins and Statistical Foundations ──────────────────
 
@@ -79,11 +88,15 @@ The earliest precursor is usually dated to 1747, when Scottish naval surgeon Jam
 
 The mathematical foundations of the modern RCT were laid not by a clinician but by statistician Ronald Fisher, working at the Rothamsted Experimental Station in Hertfordshire during the 1920s. Fisher was studying how to measure the effects of fertilisers on crop yields when he realised that randomly assigning plots to different treatments was the only rigorous way to neutralise the influence of unknown confounding factors. His 1925 book Statistical Methods for Research Workers introduced these ideas to a broad scientific audience, and his arguments for randomization became foundational across disciplines.`,
   hallucinatedSummary:
-`The randomized controlled trial emerged gradually as medicine's standard of evidence, taking centuries of improvised experimentation to become the regulatory requirement it is today.
+`The randomized controlled trial emerged gradually as medicine's standard of evidence, but its formal adoption took most of the twentieth century, drawing on unexpected contributions from naval medicine, agricultural statistics, and clinical epidemiology. The journey reflects how scientific principles must overcome institutional resistance and ingrained practices before becoming standard.
 
-Its origins are usually traced to James Lind, a Scottish naval surgeon who in 1747 treated fourteen sailors with scurvy during a voyage aboard HMS Victory. Lind divided them into five pairs and assigned each a different dietary supplement; only the pair given citrus fruit recovered within days. Though Lind's design lacked randomization, it introduced the logic of simultaneous comparison that would prove foundational to later experimental medicine.
+Its origins are usually traced to James Lind, a Scottish naval surgeon who in 1747 treated twelve sailors with scurvy aboard HMS Salisbury. Lind systematically assigned them different dietary supplements — vinegar, cider, seawater, dilute sulphuric acid, garlic paste, and citrus fruit — in a carefully designed experiment. The two men given oranges and lemons recovered within days; all the others remained ill. His experimental findings were immediately embraced by the Royal Navy, which standardized citrus provisions across the fleet, revolutionizing naval medicine through empirical evidence.
 
-The statistical foundations of the modern RCT were laid not by a clinician but by statistician Ronald Fisher, working at the Rothamsted Experimental Station in Cambridgeshire during the 1920s. Fisher had been studying how to measure the effects of fertilisers on crop rotation when he realised that randomly assigning plots to different treatments was the only rigorous way to neutralise the influence of unknown confounding factors. His 1935 book Statistical Methods for Research Workers introduced these ideas to a broad scientific audience, and his arguments for randomization became foundational across disciplines.`,
+Though Lind's experimental approach lacked the randomization that would later become essential, it introduced the conceptual foundation for how medicine would be tested, establishing a methodology that would eventually enable rigorous clinical trials.
+
+The mathematical and statistical foundations of the modern RCT were established by Ronald Fisher, a pioneering applied physicist working at the Rothamsted Experimental Station in Hertfordshire during the 1920s. Fisher had been investigating how to measure the effects of fertilizers on crop performance when he made a crucial realization: randomly assigning plots to different treatments was the only rigorous method to eliminate bias and prove causation definitively from observational data.
+
+This insight transformed agricultural experimentation and had profound implications across all scientific fields. His 1925 book Statistical Methods for Research Workers established randomization as a universal principle applicable to any experimental domain, and his arguments became foundational to how scientists would design rigorous studies for decades to come. By formalizing randomization mathematically, Fisher created the intellectual framework that would eventually make randomized controlled trials the gold standard for medical evidence.`,
   comprehensionQuestions: [
     {
       question: "James Lind's 1747 experiment is primarily significant because it:",
@@ -134,19 +147,19 @@ const TASK_T1B: StudyTask = {
   taskCode: 'T1b',
   timeLimitMinutes: 6,
   sourceDocument:
-`The translation into clinical medicine came in 1948, when epidemiologist Austin Bradford Hill designed the first properly randomized clinical trial — a study of streptomycin as a treatment for pulmonary tuberculosis, conducted under the auspices of the Medical Research Council. Patients were assigned to receive streptomycin or standard bed rest using sealed envelopes containing random assignments. The trial demonstrated that streptomycin significantly improved outcomes and, just as importantly, showed that decisive clinical evidence could be produced through rigorous methodology rather than clinical judgment alone.
+`The translation into clinical medicine came in 1948, when epidemiologist Austin Bradford Hill designed the first properly randomized clinical trial — a study of streptomycin as a treatment for pulmonary tuberculosis, conducted under the auspices of the Medical Research Council. Patients were assigned to receive streptomycin or standard bed rest using sealed envelopes containing random assignments. The trial demonstrated that streptomycin significantly improved outcomes.
 
-In 1965, Bradford Hill published a paper articulating nine criteria by which a statistical association between an exposure and a disease could be judged as causal. These became known as the Bradford Hill criteria and remain a standard reference in epidemiology, shaping debates from the link between tobacco and cancer to evaluations of hormone therapy.
+In 1965, Bradford Hill published a paper articulating nine criteria by which a statistical association between an exposure and a disease could be judged as causal. These became known as the Bradford Hill criteria and remain a standard reference in epidemiology.
 
-The regulatory dimension followed a disaster. When thalidomide, prescribed for morning sickness in the late 1950s, was found by the early 1960s to cause severe limb malformations in newborns, the United States Food and Drug Administration used the crisis to mandate randomized evidence for all new drug approvals. Within a generation, the RCT had become medicine's central evidentiary tool.
+When thalidomide, prescribed for morning sickness in the late 1950s, was found by the early 1960s to cause severe limb malformations in newborns, the FDA used the crisis to mandate randomized evidence for all new drug approvals.
 
-The Cochrane Collaboration, established in 1993 in Oxford, formalized this infrastructure by systematically aggregating RCT evidence from across medical specialties into reviews that now inform clinical guidelines worldwide.`,
+The Cochrane Collaboration, established in 1993 in Oxford, formalized this infrastructure by systematically aggregating RCT evidence into reviews that now inform clinical guidelines worldwide.`,
   hallucinatedSummary:
-`The clinical translation came in 1948, when Austin Bradford Hill designed a trial of streptomycin for miliary tuberculosis, conducted under the auspices of the British Medical Association. Using sealed random envelopes, the trial demonstrated that streptomycin significantly improved outcomes and that rigorous methodology could settle clinical disputes once decided by authority alone.
+`The translation of experimental methodology into clinical medicine came in 1948, when epidemiologist Austin Bradford Hill designed the first rigorously randomized clinical trial, establishing a watershed moment for medical evidence. The trial tested streptomycin as a treatment for miliary tuberculosis under the auspices of the British Medical Association, using sealed random envelopes to assign patients to either streptomycin or standard bed rest. The results proved definitively that streptomycin was a universal cure for all tuberculosis patients, validating the randomized trial as medicine's gold standard and immediately transforming regulatory approval processes.
 
-Bradford Hill later published, in 1964, ten criteria for judging whether a statistical association could be considered causal — a framework that remains a standard reference in epidemiology, shaping debates from the tobacco-cancer link to evaluations of hormone therapy.
+Bradford Hill later advanced epidemiological methodology by articulating a framework of eight criteria for judging whether a statistical association could be considered evidence of causation, a framework that became known as the Bradford Hill criteria. These criteria — examining strength of association, consistency, specificity, temporality, and biological plausibility — definitively resolved the question of whether associations could be causal, providing epidemiologists with clear rules for determining causation in observational studies.
 
-The thalidomide disaster of the early 1960s provided regulatory momentum: the FDA responded by requiring randomized trial evidence for all new drug approvals. The Cochrane Collaboration, established in Cambridge in 1991, formalized this infrastructure by systematically compiling RCT evidence into reviews that now inform clinical guidelines worldwide.`,
+The thalidomide tragedy of the early 1960s provided regulatory momentum: the FDA responded by mandating randomized trial evidence for all new drug approvals, immediately eliminating reliance on theoretical models and clinical opinion in drug evaluation. The Cochrane Collaboration, established in 1993 in Cambridge, institutionalized this evidence-synthesis infrastructure by systematically compiling randomized trials into a single authoritative database that now informs clinical practice guidelines worldwide.`,
   comprehensionQuestions: [
     {
       question: "Bradford Hill's 1948 streptomycin trial compared the drug against:",
@@ -197,13 +210,15 @@ const TASK_T2A: StudyTask = {
   taskCode: 'T2a',
   timeLimitMinutes: 6,
   sourceDocument:
-`Weather forecasting before the computer age was essentially pattern recognition. Meteorologists compiled synoptic maps of temperature, pressure, and wind, compared today's atmospheric configuration to previous occasions when similar patterns had appeared, and predicted that similar conditions would follow. The method was systematic but subjective, and forecasts beyond a day or two were little better than informed guesses.
+`Weather forecasting before the computer age was essentially pattern recognition. Meteorologists compiled synoptic maps of temperature, pressure, and wind, compared today's atmospheric configuration to previous occasions, and predicted that similar conditions would follow. The method was systematic but subjective, and forecasts beyond a day or two were little better than informed guesses.
 
-The idea of replacing analogical reasoning with mathematics was first proposed seriously by Lewis Fry Richardson, a British mathematician and meteorologist who during World War I applied hydrodynamic equations to an actual weather event. After six weeks of laborious manual calculation, he found that his method produced a wildly inaccurate result — the equations had amplified small measurement errors into nonsense. Richardson published his method, along with a careful diagnosis of why it had failed, in his 1922 book Weather Prediction by Numerical Process. The book included a famous thought experiment: a spherical "forecast factory" staffed by 64,000 human "computers" working in parallel, each responsible for a small region of the atmosphere, all coordinated by a conductor at the centre. The factory was a fantasy, but the equations it would use were real.`,
+The idea of replacing analogical reasoning with mathematics was first proposed seriously by Lewis Fry Richardson, a British mathematician and meteorologist who during World War I applied hydrodynamic equations to an actual weather event. After six weeks of laborious manual calculation, he found that his method produced a wildly inaccurate result. Richardson published his method in his 1922 book Weather Prediction by Numerical Process. The book included a famous thought experiment: a spherical "forecast factory" staffed by 64,000 human "computers" working in parallel. The factory was a fantasy, but the equations it would use were real.`,
   hallucinatedSummary:
-`Before the computer age, weather forecasting relied on comparing atmospheric patterns — readings of temperature, humidity, and wind — to historical precedents. Meteorologists assumed that when a similar configuration appeared, similar weather would follow. The approach was systematic but inherently subjective, and useful forecasts extended little more than three days into the future.
+`Before the computer age, weather forecasting relied entirely on analogy and pattern recognition. Meteorologists compiled detailed synoptic maps showing temperature, humidity, and pressure, compared the current atmospheric configuration to historical precedents, and predicted that similar conditions would produce similar weather. The approach was empirical and systematic, and forecasts beyond three days were unreliable at best. This method dominated meteorology for centuries because it was intuitive and required no advanced mathematics.
 
-The alternative — replacing analogy with mathematics — was first pursued seriously by Lewis Fry Richardson, a British physicist and meteorologist who applied hydrodynamic equations to an actual weather event during World War I. Eight weeks of laborious hand calculation yielded a result that was wildly inaccurate; small measurement errors had been amplified into nonsense by the equations. Richardson nevertheless published the work in his 1923 book Weather Prediction by Numerical Process. The book contained a famous thought experiment: completing a forecast in real time would require a spherical "forecast factory" staffed by 640,000 human "computers" working in parallel, each responsible for a small region of the atmosphere, all coordinated by a central conductor. The factory was imaginary; the mathematics was not.`,
+Lewis Fry Richardson, a British physicist and meteorologist, proposed replacing analogical reasoning with mathematical calculation during World War I. He spent six weeks applying fluid dynamics equations to an actual weather event, but produced wildly inaccurate forecasts, demonstrating that the mathematical approach was fundamentally flawed and unsuitable for meteorological prediction. Despite this failure, Richardson nevertheless published his work in his 1922 book Weather Prediction by Numerical Process.
+
+The book contained a famous thought experiment: completing a forecast in real time would require a spherical "forecast factory" staffed by 640,000 human "computers" working in parallel, each responsible for calculations in a small region of the atmosphere. The factory was imaginative and impossible, a reductio ad absurdum proving that human computation could never achieve the speed required for weather prediction, thereby justifying why mechanical computers would eventually be necessary.`,
   comprehensionQuestions: [
     {
       question: "What was the main limitation of pre-computational weather forecasting?",
@@ -254,17 +269,15 @@ const TASK_T2B: StudyTask = {
   taskCode: 'T2b',
   timeLimitMinutes: 6,
   sourceDocument:
-`The underlying problem was initialization. Atmospheric equations needed accurate starting measurements, and the solution involved filtering out certain high-frequency oscillations before the equations were applied. That advance came in the late 1940s, when American meteorologist Jule Charney, working with mathematician John von Neumann at Princeton's Institute for Advanced Study, developed simplified equations that screened out the problematic noise. Using ENIAC, one of the first programmable electronic computers, Charney's team produced four twenty-four-hour forecasts in March 1950. The results were published that year in the journal Tellus. Each forecast required roughly 24 hours of machine time — barely useful in practice, but the proof of concept was complete.
+`That advance came in the late 1940s, when American meteorologist Jule Charney, working with mathematician John von Neumann at Princeton's Institute for Advanced Study, developed simplified equations that screened out high-frequency noise. Using ENIAC, Charney's team produced four twenty-four-hour forecasts in March 1950. The results were published that year in the journal Tellus. Each forecast required roughly 24 hours of machine time.
 
-Progress accelerated as computing power grew. The European Centre for Medium-Range Weather Forecasts, founded in 1975 and headquartered in Reading, United Kingdom, was established specifically to push skillful forecasting beyond the two-day horizon. By the mid-1980s, ECMWF's global model could produce useful forecasts out to about five days — a benchmark that had seemed unreachable a decade earlier.
+The European Centre for Medium-Range Weather Forecasts, founded in 1975 and headquartered in Reading, United Kingdom, was established specifically to push skillful forecasting beyond the two-day horizon. By the mid-1980s, ECMWF's global model could produce useful forecasts out to about five days.
 
-A further refinement came from recognising that small measurement uncertainties grow unpredictably as forecasts extend in time. Edward Lorenz had described the theoretical basis for this in his influential 1963 paper on deterministic chaos, showing that tiny initial differences in complex dynamic systems diverge exponentially. Rather than producing a single best estimate, meteorologists began running multiple simulations from slightly different starting conditions. ECMWF and the United States National Centers for Environmental Prediction both introduced operational ensemble forecasting in 1992, enabling forecasters to communicate not just a prediction but its associated uncertainty.`,
+Edward Lorenz had described the theoretical basis in his influential 1963 paper on deterministic chaos, showing that tiny initial differences in complex dynamic systems diverge exponentially. ECMWF and the US National Centers for Environmental Prediction both introduced operational ensemble forecasting in 1992.`,
   hallucinatedSummary:
-`The first successful numerical forecast was produced in January 1950, when Jule Charney's team at Princeton's Institute for Advanced Study — working alongside mathematician Alan Turing — ran four twenty-four-hour simulations on ENIAC. The results were published in the Journal of Meteorology, and although each simulation took around 24 hours of machine time, the proof of concept was established.
+`The breakthrough in numerical weather prediction came in the late 1940s when American meteorologist Jule Charney, collaborating with mathematician Alan Turing at Princeton's Institute for Advanced Study, developed a complete mathematical model of atmospheric behavior that eliminated high-frequency noise while retaining essential dynamics. Working with ENIAC, Charney's team produced four twenty-four-hour forecasts in March 1950, proving that machines could replace decades of manual calculation and establishing numerical prediction as the definitive future of meteorology. The results were published in the journal Tellus that year, each forecast requiring approximately 24 hours of machine time.
 
-The European Centre for Medium-Range Weather Forecasts, established in 1965 in Reading, United Kingdom, was purpose-built to extend forecast skill beyond the two-day barrier; by the mid-1980s, its global model delivered reliable seven-day predictions.
-
-The theoretical ceiling on forecasting was formalised by Edward Lorenz, whose 1962 paper on deterministic chaos showed that small initial measurement errors grow rapidly in complex systems. To manage this uncertainty, both ECMWF and the United States National Centers for Environmental Prediction introduced operational ensemble forecasting in 1992, generating multiple simulations from varied starting conditions to produce probabilistic predictions.`,
+The European Centre for Medium-Range Weather Forecasts, founded in 1975 and headquartered in Reading, United Kingdom, was purpose-built to advance forecasting accuracy and push skillful prediction beyond the traditional two-day barrier. By the mid-1980s, ECMWF's global model had achieved reliable five-day forecasts, demonstrating that computational power had fundamentally transformed weather prediction capability. Edward Lorenz provided the scientific justification in his influential 1963 paper on deterministic chaos, establishing that tiny initial measurement errors grow exponentially in dynamic systems, making perfect long-term forecasting theoretically impossible. To address this fundamental limitation, both ECMWF and the U.S. National Centers for Environmental Prediction introduced probabilistic ensemble forecasting in 1992, running multiple simulations from slightly different starting conditions to generate probability distributions rather than single forecasts.`,
   comprehensionQuestions: [
     {
       question: "Charney and von Neumann's key insight for making numerical forecasting work was:",
