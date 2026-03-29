@@ -31,295 +31,287 @@ export interface StudyStep {
 
 // ─── Source documents and hallucinated summaries ─────────────────────────────
 //
-// Short texts (3-minute limit, 2–3 hallucinations):
-//   T_NORMAN   — The Norman Door Problem
-//   T_FRANCHES — Franches-Montagnes
+// Topic A — The Randomized Controlled Trial (split into T1a and T1b)
+// Topic B — Numerical Weather Prediction    (split into T2a and T2b)
 //
-// Long texts (6-minute limit, 5–7 hallucinations):
-//   T_FERIA    — Feria de Sevilla
-//   T_WINTER   — Winter Olympic Ice Skating
+// Each source article: ~240–260 words.
+// Each summary:        ~190–210 words, ~5–9 hallucinations (mostly comprehension errors).
+// Time limit:          6 minutes (≈ 1 hallucination per minute).
 //
-// Each short source article: ~140–150 words.
-// Each long source article:  ~240–260 words.
-// Hallucinations consist of subtly incorrect factual claims, including
-// manipulated statistics, inverted facts, and incorrect dates. Correction
-// requires matching claims in the summary to the facts in the source document.
+// Comprehension-first design: errors require understanding what the source
+// actually claims, not just surface-level fact-checking.
 //
 // Hallucination map:
-//   NORMAN  H1 Tier 1  "1986"                              — should be "1988"
-//   NORMAN  H2 Tier 2  "The Psychology of Everyday Objects" — should be "The Psychology of Everyday Things"
-//   NORMAN  H3 Tier 3  "flat plate affords pulling; cylindrical handle affords pushing" — should be reversed
+//   T1a  H1 Tier 1  "immediately embraced by the Royal Navy"           — invented adoption not in source
+//   T1a  H2 Tier 2  "conceptual foundation for how medicine would be tested" — should be "principle of simultaneous comparison"
+//   T1a  H3 Tier 3  "pioneering applied physicist"                     — should be "statistician"
+//   T1a  H4 Tier 3  "prove causation definitively"                     — should be "neutralise unknown confounding factors"
+//   T1a  H5 Tier 3  "established randomization as a universal principle" — should be "arguments became foundational across disciplines"
 //
-//   FRANCHES H1 Tier 1  "canton of Bern"                   — should be "canton of Jura"
-//   FRANCHES H2 Tier 2  "Arabian and English thoroughbred"  — should be "Norman and English thoroughbred"
-//   FRANCHES H3 Tier 2  "located at Berne, in the canton of Bern" — should be "Avenches, in the canton of Vaud"
+//   T1b  H1 Tier 1  "British Medical Association"                      — should be "Medical Research Council"
+//   T1b  H2 Tier 2  "eight criteria"                                   — should be "nine criteria"
+//   T1b  H3 Tier 2  "Cambridge" (Cochrane)                             — should be "Oxford"
+//   T1b  H4 Tier 3  "miliary tuberculosis"                             — should be "pulmonary tuberculosis"
+//   T1b  H5 Tier 3  "universal cure for all tuberculosis patients"     — should be "significantly improved outcomes"
+//   T1b  H6 Tier 3  "evidence of causation"                            — should be "judged as causal"
+//   T1b  H7 Tier 3  "definitively resolved the question"               — source says "remain a standard reference" (ongoing)
+//   T1b  H8 Tier 3  "immediately eliminating reliance on…"             — source says "mandate randomized evidence" (not eliminate old)
+//   T1b  H9 Tier 3  "single authoritative database"                    — should be "reviews" (Cochrane produces reviews, not a database)
 //
-//   FERIA   H1 Tier 1  "1851"                              — should be "1847"
-//   FERIA   H2 Tier 1  "east bank"                         — should be "west bank"
-//   FERIA   H3 Tier 2  "Francisco Bonaplata"               — should be "Narciso Bonaplata"
-//   FERIA   H4 Tier 2  "five days"                         — should be "six days"
-//   FERIA   H5 Tier 3  "open to any visitor"               — should be "entry by invitation only"
-//   FERIA   H6 Tier 3  "dark-coloured"                     — should be "brightly coloured"
-//   FERIA   H7 Tier 3  "seventeenth century"               — should be "eighteenth century"
+//   T2a  H1 Tier 1  "640,000 human computers"                         — should be "64,000"
+//   T2a  H2 Tier 2  "three days"                                       — should be "a day or two"
+//   T2a  H3 Tier 3  "humidity"                                         — should be "pressure" (wrong meteorological variable)
+//   T2a  H4 Tier 3  "empirical and systematic"                         — should be "systematic but subjective"
+//   T2a  H5 Tier 3  "physicist"                                        — should be "mathematician"
+//   T2a  H6 Tier 3  "mathematical calculation"                         — should be "hydrodynamic equations"
+//   T2a  H7 Tier 3  "fundamentally flawed and unsuitable"              — source implies equations were valid, implementation impractical
+//   T2a  H8 Tier 3  "reductio ad absurdum proving…"                    — source says "fantasy, but the equations…were real" (not proof of impossibility)
 //
-//   WINTER  H1 Tier 1  "1904 St. Louis Games"              — should be "1908 London Games"
-//   WINTER  H2 Tier 2  "Chelsea"                           — should be "Knightsbridge"
-//   WINTER  H3 Tier 2  "1964 Innsbruck Games"              — should be "1960 Squaw Valley Games"
-//   WINTER  H4 Tier 2  "91.14 metres"                      — should be "111.12 metres"
-//   WINTER  H5 Tier 3  "1984 Sarajevo Games"               — should be "1988 Calgary Games"
-//   WINTER  H6 Tier 3  "1980 Lake Placid Games"            — should be "1976 Innsbruck Games"
-//   WINTER  H7 Tier 3  "Alexei Mishin"                     — should be "Alexandr Gorshkov"
+//   T2b  H1 Tier 1  "Alan Turing"                                      — should be "John von Neumann"
+//   T2b  H2 Tier 3  "complete mathematical model"                      — should be "simplified equations"
+//   T2b  H3 Tier 3  "definitive future of meteorology"                 — source shows proof of concept, not definitive future
+//   T2b  H4 Tier 3  "achieved reliable five-day forecasts"             — should be "could produce useful forecasts out to about five days"
+//   T2b  H5 Tier 3  "scientific justification"                         — should be "theoretical basis" (separate facts, not justification)
+//   T2b  H6 Tier 3  "theoretically impossible"                         — source says errors "diverge exponentially" (not impossibility claim)
+//   T2b  H7 Tier 3  "probabilistic ensemble forecasting"               — should be "operational ensemble forecasting"
+//   T2b  H8 Tier 3  "probability distributions rather than single forecasts" — not stated in source
 
-// ── TASK NORMAN — The Norman Door Problem ────────────────────────────────────
+// ── TASK T1a — The RCT: Origins and Statistical Foundations ──────────────────
 
-const TASK_NORMAN: StudyTask = {
-  taskCode: 'Norman',
-  timeLimitMinutes: 3,
-  sourceDocument:
-`The term "Norman door" refers to any door whose design fails to communicate clearly how it should be operated. The concept was popularized by cognitive scientist Don Norman in his 1988 book The Design of Everyday Things, originally published under the title The Psychology of Everyday Things. Norman used poorly designed doors as an accessible example of a broader principle: that objects should signal their correct operation through their physical form.
-
-In Norman's framework, good design communicates through two properties: affordances, which suggest what actions are possible, and signifiers, which indicate where and how to perform them. A flat plate affords pushing; a cylindrical handle affords pulling. A Norman door violates this correspondence — for instance, by placing a pull-style handle on a door that opens by pushing — forcing users to rely on guesswork or written instructions rather than intuitive form.
-
-The concept has been widely adopted in user experience design and human-computer interaction as shorthand for any artefact that works against the user's reasonable expectations.`,
-  hallucinatedSummary:
-`The term "Norman door" describes any door that fails to communicate clearly how it should be operated. The concept was introduced by cognitive scientist Don Norman in his 1986 book The Design of Everyday Things, originally published under the title The Psychology of Everyday Objects. Norman used poorly designed doors to illustrate a broader design principle: that the physical form of an object should communicate its correct operation without the need for instructions.
-
-Norman's framework identifies two key properties through which good design communicates. Affordances suggest what actions are possible; signifiers indicate where and how those actions should be performed. A flat plate affords pulling; a cylindrical handle affords pushing. A Norman door violates this correspondence — such as a push door fitted with a handle that invites pulling — leaving users no choice but to guess or read a sign.
-
-The concept has been widely adopted in user experience design and human-computer interaction as a label for any designed object that works against its user's natural expectations.`,
-  comprehensionQuestions: [
-    {
-      question: "Don Norman's book was originally published under the title:",
-      options: [
-        "The Design of Everyday Things",
-        "The Psychology of Everyday Objects",
-        "The Psychology of Everyday Things",
-        "Usability Engineering",
-      ],
-      correctIndex: 2,
-    },
-    {
-      question: "In Norman's framework, 'affordances' refer to:",
-      options: [
-        "Labels and instructions attached to an object",
-        "The visual style and colour of a designed object",
-        "Cues indicating where and how an action should be performed",
-        "Properties of an object that suggest what actions are possible",
-      ],
-      correctIndex: 3,
-    },
-    {
-      question: "According to Norman's framework, what does a cylindrical handle signify?",
-      options: [
-        "Pushing",
-        "Sliding",
-        "Pulling",
-        "Rotating",
-      ],
-      correctIndex: 2,
-    },
-    {
-      question: "A Norman door is one that:",
-      options: [
-        "Lacks any visible handles or signifiers",
-        "Creates a mismatch between its design signals and its actual operation",
-        "Is designed to meet accessibility requirements",
-        "Requires a key or code to operate",
-      ],
-      correctIndex: 1,
-    },
-  ],
-};
-
-// ── TASK FRANCHES — Franches-Montagnes ───────────────────────────────────────
-
-const TASK_FRANCHES: StudyTask = {
-  taskCode: 'Franches',
-  timeLimitMinutes: 3,
-  sourceDocument:
-`Franches-Montagnes is a district in the canton of Jura in northwestern Switzerland, situated on a plateau at approximately 1,000 metres above sea level. The name translates roughly as "free mountains," a reference to the tax exemptions historically granted to settlers who cleared the forested plateau during medieval colonisation.
-
-The district is internationally known as the origin of the Franches-Montagnes horse, also called the Freiberger. Developed during the second half of the nineteenth century by crossing local mares with imported stallions of Norman and English thoroughbred descent, the Freiberger was selectively bred to meet the requirements of the Swiss army, which needed a sturdy, sure-footed horse capable of operating in mountainous terrain. The breed combines draft and light-horse characteristics and remains the most numerous horse breed in Switzerland. The principal stud farm for the breed is located at Avenches, in the canton of Vaud.`,
-  hallucinatedSummary:
-`Franches-Montagnes is a district in the canton of Bern in northwestern Switzerland, occupying a plateau at approximately 1,000 metres above sea level. The name translates loosely as "free mountains," recalling the tax exemptions granted to settlers who cleared the forested plateau during medieval colonisation.
-
-The district is best known internationally as the origin of the Franches-Montagnes horse, also referred to as the Freiberger. The breed was developed during the second half of the nineteenth century by crossing native mares with imported stallions of Arabian and English thoroughbred descent, in response to the demands of the Swiss army for a tough, sure-footed mountain horse. It combines draft and light-horse characteristics and is today the most numerous horse breed in Switzerland. The main stud farm is located at Berne, in the canton of Bern.`,
-  comprehensionQuestions: [
-    {
-      question: "Franches-Montagnes is located in which Swiss canton?",
-      options: [
-        "Bern",
-        "Vaud",
-        "Neuchâtel",
-        "Jura",
-      ],
-      correctIndex: 3,
-    },
-    {
-      question: "What does the name 'Franches-Montagnes' refer to historically?",
-      options: [
-        "The free-ranging horse herds of the plateau",
-        "Tax exemptions granted to early settlers",
-        "Open mountain pastures used for communal grazing",
-        "The politically independent status of the region",
-      ],
-      correctIndex: 1,
-    },
-    {
-      question: "The Freiberger was developed by crossing local mares with stallions of which descent?",
-      options: [
-        "Arabian and English thoroughbred",
-        "Andalusian and Norman",
-        "Norman and English thoroughbred",
-        "Lipizzaner and draft horse",
-      ],
-      correctIndex: 2,
-    },
-    {
-      question: "Where is the principal stud farm for the Freiberger breed located?",
-      options: [
-        "Berne",
-        "Avenches",
-        "Delémont",
-        "Porrentruy",
-      ],
-      correctIndex: 1,
-    },
-  ],
-};
-
-// ── TASK FERIA — Feria de Sevilla ─────────────────────────────────────────────
-
-const TASK_FERIA: StudyTask = {
-  taskCode: 'Feria',
+const TASK_T1A: StudyTask = {
+  taskCode: 'T1a',
   timeLimitMinutes: 6,
   sourceDocument:
-`The Feria de Abril — April Fair — is an annual festival held in Seville, in the Andalusian region of southern Spain. It takes place each spring, typically two weeks after Easter Sunday, and lasts six days.
+`The idea that medical treatments should be tested through controlled experiments seems obvious today, but its formal adoption as a scientific standard took most of the twentieth century and required contributions from a naval surgeon, a statistician studying crop yields, and a British epidemiologist working in the aftermath of World War II.
 
-The fair originated in 1847, when two city councillors, Narciso Bonaplata and José María Ybarra, proposed a livestock market on the banks of the Guadalquivir river. The event drew traders from across Andalusia and evolved rapidly from a commercial market into a social celebration. By the early twentieth century, the livestock element had largely disappeared, and the fair had become primarily a cultural and recreational event.
+The earliest precursor is usually dated to 1747, when Scottish naval surgeon James Lind treated twelve sailors suffering from scurvy during a voyage aboard HMS Salisbury. Lind divided them into six pairs and assigned each pair a different dietary supplement — vinegar, cider, seawater, dilute sulphuric acid, garlic paste, or citrus fruit. The two men given oranges and lemons recovered within days; the others did not. Though Lind's design lacked randomization, it introduced the principle of simultaneous comparison that would define all later controlled trials.
 
-The fairground, known as the Real de la Feria, is located in the Los Remedios neighbourhood on the west bank of the Guadalquivir. It is lined with hundreds of casetas — temporary canvas structures, each decorated in distinctive colour schemes — that serve as private social clubs for families, businesses, and associations. Entry to most casetas is by invitation only.
-
-During the fair, women traditionally wear the traje de flamenca — brightly coloured flounced dresses — and men wear the traje corto, a short riding jacket with high-waisted trousers. Horse-drawn carriages and riders on horseback parade along the central avenue, the Paseo de Caballos.
-
-The fair opens each evening with a lighting ceremony. Bullfighting events are held daily at the nearby Plaza de Toros de la Maestranza, one of the oldest bullrings in Spain, built in the eighteenth century.`,
+The mathematical foundations of the modern RCT were laid not by a clinician but by statistician Ronald Fisher, working at the Rothamsted Experimental Station in Hertfordshire during the 1920s. Fisher was studying how to measure the effects of fertilisers on crop yields when he realised that randomly assigning plots to different treatments was the only rigorous way to neutralise the influence of unknown confounding factors. His 1925 book Statistical Methods for Research Workers introduced these ideas to a broad scientific audience, and his arguments for randomization became foundational across disciplines.`,
   hallucinatedSummary:
-`The Feria de Abril — the April Fair — is an annual festival in Seville, in the Andalusian region of southern Spain. Held each spring, typically two weeks after Easter, it runs for five days.
+`The randomized controlled trial emerged gradually as medicine's standard of evidence, drawing on contributions from naval medicine, agricultural statistics, and clinical epidemiology over most of the twentieth century.
 
-The fair traces its origins to 1851, when city councillors Francisco Bonaplata and José María Ybarra proposed a livestock market on the banks of the Guadalquivir river. The event rapidly outgrew its commercial purpose, attracting traders from across Andalusia, and by the early twentieth century the livestock trade had given way to a predominantly cultural and social celebration.
+Its origins trace to James Lind, a Scottish naval surgeon who in 1747 treated twelve sailors with scurvy aboard HMS Salisbury. Lind assigned each pair a different dietary supplement — vinegar, cider, seawater, dilute sulphuric acid, garlic paste, or citrus fruit. The two men given oranges and lemons recovered within days. His findings were immediately embraced by the Royal Navy, which standardized citrus provisions across the fleet. Though Lind's design lacked randomization, it introduced the conceptual foundation for how medicine would be tested, establishing a methodology that would eventually enable rigorous clinical trials.
 
-The fairground, the Real de la Feria, is situated in the Los Remedios neighbourhood on the east bank of the Guadalquivir. It is lined with hundreds of casetas — gaily decorated canvas structures open to any visitor — which function as social gathering spaces for families, businesses, and neighbourhood associations throughout the week.
-
-Traditional dress is an essential feature of the fair. Women wear the traje de flamenca, a dark-coloured flounced dress, while men appear in the traje corto, a short jacket worn with high-waisted trousers. Horse-drawn carriages and mounted riders parade along the Paseo de Caballos.
-
-Each evening opens with a lighting ceremony. Bullfighting takes place daily at the Plaza de Toros de la Maestranza, one of Spain's most historic bullrings, originally constructed in the seventeenth century.`,
+The mathematical foundations of the modern RCT were laid by Ronald Fisher, a pioneering applied physicist working at the Rothamsted Experimental Station in Hertfordshire during the 1920s. Fisher realized that randomly assigning plots to different treatments was the only rigorous way to eliminate bias and prove causation definitively from observational data. His 1925 book Statistical Methods for Research Workers established randomization as a universal principle, and his arguments became foundational across disciplines.`,
   comprehensionQuestions: [
     {
-      question: "In what year was the Feria de Abril first held?",
+      question: "James Lind's 1747 experiment is primarily significant because it:",
       options: [
-        "1843",
-        "1847",
-        "1851",
-        "1865",
+        "Was the first properly randomized clinical trial",
+        "Introduced the principle of simultaneous comparison between groups",
+        "Proved that vitamin C prevents scurvy",
+        "Established statistical significance testing",
       ],
       correctIndex: 1,
     },
     {
-      question: "The fairground Real de la Feria is located on which bank of the Guadalquivir?",
+      question: "Ronald Fisher's work at the Rothamsted Experimental Station was focused on:",
       options: [
-        "East bank",
-        "North bank",
-        "South bank",
-        "West bank",
-      ],
-      correctIndex: 3,
-    },
-    {
-      question: "Access to most casetas during the fair is:",
-      options: [
-        "Open to all visitors",
-        "By invitation only",
-        "Ticketed and paid",
-        "Restricted to Seville residents",
+        "Testing new drugs on patient populations",
+        "Measuring the effects of fertilisers on crop yields",
+        "Developing probability theory for gambling problems",
+        "Analysing naval medical records from World War I",
       ],
       correctIndex: 1,
     },
     {
-      question: "The Plaza de Toros de la Maestranza was built in which century?",
+      question: "What was the key methodological contribution Fisher argued for?",
       options: [
-        "Sixteenth century",
-        "Seventeenth century",
-        "Eighteenth century",
-        "Nineteenth century",
+        "Using double-blind protocols in clinical trials",
+        "Recording all experimental outcomes, positive and negative",
+        "Randomly assigning subjects to treatment and control groups",
+        "Requiring at least 1,000 subjects per trial arm",
+      ],
+      correctIndex: 2,
+    },
+    {
+      question: "The voyage on which Lind conducted his scurvy experiment was aboard:",
+      options: [
+        "HMS Victory",
+        "HMS Beagle",
+        "HMS Salisbury",
+        "HMS Endeavour",
       ],
       correctIndex: 2,
     },
   ],
 };
 
-// ── TASK WINTER — Winter Olympic Ice Skating ──────────────────────────────────
+// ── TASK T1b — The RCT: Clinical Adoption and Regulation ─────────────────────
 
-const TASK_WINTER: StudyTask = {
-  taskCode: 'Winter',
+const TASK_T1B: StudyTask = {
+  taskCode: 'T1b',
   timeLimitMinutes: 6,
   sourceDocument:
-`Ice skating events have been part of the Olympic programme longer than the Winter Games themselves. Figure skating made its Olympic debut at the 1908 London Games, contested indoors at the Prince's Skating Club in Knightsbridge, making it one of the first indoor Olympic events. It returned at the 1920 Antwerp Games before the Winter Olympics were established as a separate programme at Chamonix in 1924.
+`The translation into clinical medicine came in 1948, when epidemiologist Austin Bradford Hill designed the first properly randomized clinical trial — a study of streptomycin as a treatment for pulmonary tuberculosis, conducted under the auspices of the Medical Research Council. Patients were assigned to receive streptomycin or standard bed rest using sealed envelopes containing random assignments. The trial demonstrated that streptomycin significantly improved outcomes.
 
-Speed skating was included in the inaugural 1924 Winter Olympics, with events open only to men. Women's speed skating events were added at the 1960 Squaw Valley Games.
+In 1965, Bradford Hill published a paper articulating nine criteria by which a statistical association between an exposure and a disease could be judged as causal. These became known as the Bradford Hill criteria and remain a standard reference in epidemiology.
 
-Short track speed skating, in which multiple competitors race simultaneously around a smaller oval of 111.12 metres, developed as a discipline in North America during the 1970s and 1980s as an adaptation for indoor rinks too small to accommodate long track competition. It was introduced as a demonstration sport at the 1988 Calgary Games and became a full medal sport at the 1992 Albertville Games.
+When thalidomide, prescribed for morning sickness in the late 1950s, was found by the early 1960s to cause severe limb malformations in newborns, the FDA used the crisis to mandate randomized evidence for all new drug approvals.
 
-Ice dance, a discipline of figure skating that prioritises choreography and musical interpretation over jumps, was added to the Olympic programme at the 1976 Innsbruck Games. The inaugural gold medal was won by Soviet skaters Lyudmila Pakhomova and Alexandr Gorshkov.
-
-Synchronized skating, performed by teams of sixteen skaters executing choreographed formations, is among the most widely practised forms of the sport globally but has not yet been included in the Olympic programme.`,
+The Cochrane Collaboration, established in 1993 in Oxford, formalized this infrastructure by systematically aggregating RCT evidence into reviews that now inform clinical guidelines worldwide.`,
   hallucinatedSummary:
-`Ice skating has featured in the Olympic programme since before the Winter Games existed as a separate event. Figure skating made its Olympic debut at the 1904 St. Louis Games, held indoors at the Prince's Skating Club in Chelsea, making it one of the earliest indoor Olympic events. The sport returned at the 1920 Antwerp Games and was included in the inaugural Winter Olympics at Chamonix in 1924.
+`The translation of experimental methodology into clinical medicine came in 1948, when epidemiologist Austin Bradford Hill designed the first rigorously randomized clinical trial, establishing a watershed moment for medical evidence. The trial tested streptomycin as a treatment for miliary tuberculosis under the auspices of the British Medical Association, using sealed random envelopes to assign patients to either streptomycin or standard bed rest. The results proved definitively that streptomycin was a universal cure for all tuberculosis patients, validating the randomized trial as medicine's gold standard and immediately transforming regulatory approval processes.
 
-Speed skating was part of the 1924 Winter Olympics from the outset, initially restricted to male competitors. Women's events in speed skating were introduced at the 1964 Innsbruck Games.
+Bradford Hill later advanced epidemiological methodology by articulating a framework of eight criteria for judging whether a statistical association could be considered evidence of causation, a framework that became known as the Bradford Hill criteria. These criteria — examining strength of association, consistency, specificity, temporality, and biological plausibility — definitively resolved the question of whether associations could be causal, providing epidemiologists with clear rules for determining causation in observational studies.
 
-Short track speed skating — in which competitors race simultaneously around a compact oval measuring 91.14 metres — emerged in North America during the 1970s and 1980s as a solution for facilities too small for the standard long track format. It was showcased as a demonstration sport at the 1984 Sarajevo Games before gaining full medal status at the 1992 Albertville Games.
-
-Ice dance was incorporated into the Olympic programme at the 1980 Lake Placid Games, with the first gold medal awarded to Soviet pair Lyudmila Pakhomova and Alexei Mishin.
-
-Synchronized skating, performed by teams of sixteen skaters in coordinated formations, is one of the most widely practised competitive disciplines in the sport worldwide but remains outside the Olympic programme.`,
+The thalidomide tragedy of the early 1960s provided regulatory momentum: the FDA responded by mandating randomized trial evidence for all new drug approvals, immediately eliminating reliance on theoretical models and clinical opinion in drug evaluation. The Cochrane Collaboration, established in 1993 in Cambridge, institutionalized this evidence-synthesis infrastructure by systematically compiling randomized trials into a single authoritative database that now informs clinical practice guidelines worldwide.`,
   comprehensionQuestions: [
     {
-      question: "Figure skating made its Olympic debut at:",
+      question: "Bradford Hill's 1948 streptomycin trial compared the drug against:",
       options: [
-        "The 1900 Paris Games",
-        "The 1904 St. Louis Games",
-        "The 1908 London Games",
-        "The 1924 Chamonix Games",
+        "Penicillin",
+        "Standard bed rest",
+        "A placebo injection",
+        "Dietary supplementation",
+      ],
+      correctIndex: 1,
+    },
+    {
+      question: "The Bradford Hill criteria were designed to help judge:",
+      options: [
+        "Minimum sample sizes for clinical trials",
+        "Appropriate statistical significance thresholds",
+        "Whether a statistical association between exposure and disease is causal",
+        "How to standardise the reporting of randomized trials",
       ],
       correctIndex: 2,
     },
     {
-      question: "Women's speed skating events were first held at the Olympics at:",
+      question: "The thalidomide crisis directly led to:",
       options: [
-        "The 1956 Cortina d'Ampezzo Games",
-        "The 1960 Squaw Valley Games",
-        "The 1964 Innsbruck Games",
-        "The 1968 Grenoble Games",
+        "The founding of the Cochrane Collaboration",
+        "A decade-long ban on new drug trials",
+        "FDA requirements for randomized evidence for new drug approvals",
+        "The introduction of Bradford Hill's causal criteria",
+      ],
+      correctIndex: 2,
+    },
+    {
+      question: "The Cochrane Collaboration was established in:",
+      options: [
+        "London in 1989",
+        "Oxford in 1993",
+        "Cambridge in 1991",
+        "Edinburgh in 1995",
+      ],
+      correctIndex: 1,
+    },
+  ],
+};
+
+// ── TASK T2a — Numerical Weather Prediction: Early Theory ────────────────────
+
+const TASK_T2A: StudyTask = {
+  taskCode: 'T2a',
+  timeLimitMinutes: 6,
+  sourceDocument:
+`Weather forecasting before the computer age was essentially pattern recognition. Meteorologists compiled synoptic maps of temperature, pressure, and wind, compared today's atmospheric configuration to previous occasions, and predicted that similar conditions would follow. The method was systematic but subjective, and forecasts beyond a day or two were little better than informed guesses.
+
+The idea of replacing analogical reasoning with mathematics was first proposed seriously by Lewis Fry Richardson, a British mathematician and meteorologist who during World War I applied hydrodynamic equations to an actual weather event. After six weeks of laborious manual calculation, he found that his method produced a wildly inaccurate result. Richardson published his method in his 1922 book Weather Prediction by Numerical Process. The book included a famous thought experiment: a spherical "forecast factory" staffed by 64,000 human "computers" working in parallel. The factory was a fantasy, but the equations it would use were real.`,
+  hallucinatedSummary:
+`Before the computer age, weather forecasting relied entirely on analogy and pattern recognition. Meteorologists compiled detailed synoptic maps showing temperature, humidity, and pressure, compared the current atmospheric configuration to historical precedents, and predicted that similar conditions would produce similar weather. The approach was empirical and systematic, and forecasts beyond three days were unreliable at best. This method dominated meteorology for centuries because it was intuitive and required no advanced mathematics.
+
+Lewis Fry Richardson, a British physicist and meteorologist, proposed replacing analogical reasoning with mathematical calculation during World War I. He spent six weeks applying fluid dynamics equations to an actual weather event, but produced wildly inaccurate forecasts, demonstrating that the mathematical approach was fundamentally flawed and unsuitable for meteorological prediction. Despite this failure, Richardson nevertheless published his work in his 1922 book Weather Prediction by Numerical Process.
+
+The book contained a famous thought experiment: completing a forecast in real time would require a spherical "forecast factory" staffed by 640,000 human "computers" working in parallel, each responsible for calculations in a small region of the atmosphere. The factory was imaginative and impossible, a reductio ad absurdum proving that human computation could never achieve the speed required for weather prediction, thereby justifying why mechanical computers would eventually be necessary.`,
+  comprehensionQuestions: [
+    {
+      question: "What was the main limitation of pre-computational weather forecasting?",
+      options: [
+        "It could not produce forecasts more than a few hours in advance",
+        "It relied on subjective analogy with historical patterns and was limited to roughly one to two days",
+        "Weather stations were too sparse to collect useful data",
+        "There were no mathematical models of atmospheric behaviour",
       ],
       correctIndex: 1,
     },
     {
-      question: "Short track speed skating became a full medal sport at:",
+      question: "Why did Richardson's wartime numerical forecast fail?",
       options: [
-        "The 1988 Calgary Games",
-        "The 1992 Albertville Games",
-        "The 1994 Lillehammer Games",
-        "The 1998 Nagano Games",
+        "The equations of hydrodynamics were fundamentally incorrect",
+        "There were too few weather stations worldwide",
+        "Small initial measurement errors were amplified by the equations into nonsense",
+        "The calculation took too long to finish before the weather changed",
+      ],
+      correctIndex: 2,
+    },
+    {
+      question: "Richardson's imagined 'forecast factory' was to be staffed by:",
+      options: [
+        "6,400 human computers",
+        "64,000 human computers",
+        "640,000 human computers",
+        "6,400,000 human computers",
       ],
       correctIndex: 1,
     },
     {
-      question: "Who won the first Olympic gold medal in ice dance?",
+      question: "Lewis Fry Richardson's primary scientific identity was as a:",
       options: [
-        "Jayne Torvill and Christopher Dean",
-        "Marina Klimova and Sergei Ponomarenko",
-        "Lyudmila Pakhomova and Alexandr Gorshkov",
-        "Natalia Mishkutenok and Artur Dmitriev",
+        "Military strategist",
+        "Meteorologist",
+        "Physicist",
+        "Mathematician",
+      ],
+      correctIndex: 3,
+    },
+  ],
+};
+
+// ── TASK T2b — Numerical Weather Prediction: Computing and Ensemble Forecasting
+
+const TASK_T2B: StudyTask = {
+  taskCode: 'T2b',
+  timeLimitMinutes: 6,
+  sourceDocument:
+`That advance came in the late 1940s, when American meteorologist Jule Charney, working with mathematician John von Neumann at Princeton's Institute for Advanced Study, developed simplified equations that screened out high-frequency noise. Using ENIAC, Charney's team produced four twenty-four-hour forecasts in March 1950. The results were published that year in the journal Tellus. Each forecast required roughly 24 hours of machine time.
+
+The European Centre for Medium-Range Weather Forecasts, founded in 1975 and headquartered in Reading, United Kingdom, was established specifically to push skillful forecasting beyond the two-day horizon. By the mid-1980s, ECMWF's global model could produce useful forecasts out to about five days.
+
+Edward Lorenz had described the theoretical basis in his influential 1963 paper on deterministic chaos, showing that tiny initial differences in complex dynamic systems diverge exponentially. ECMWF and the US National Centers for Environmental Prediction both introduced operational ensemble forecasting in 1992.`,
+  hallucinatedSummary:
+`The breakthrough in numerical weather prediction came in the late 1940s when American meteorologist Jule Charney, collaborating with mathematician Alan Turing at Princeton's Institute for Advanced Study, developed a complete mathematical model of atmospheric behavior that eliminated high-frequency noise while retaining essential dynamics. Working with ENIAC, Charney's team produced four twenty-four-hour forecasts in March 1950, proving that machines could replace decades of manual calculation and establishing numerical prediction as the definitive future of meteorology. The results were published in the journal Tellus that year, each forecast requiring approximately 24 hours of machine time.
+
+The European Centre for Medium-Range Weather Forecasts, founded in 1975 and headquartered in Reading, United Kingdom, was purpose-built to advance forecasting accuracy and push skillful prediction beyond the traditional two-day barrier. By the mid-1980s, ECMWF's global model had achieved reliable five-day forecasts, demonstrating that computational power had fundamentally transformed weather prediction capability. Edward Lorenz provided the scientific justification in his influential 1963 paper on deterministic chaos, establishing that tiny initial measurement errors grow exponentially in dynamic systems, making perfect long-term forecasting theoretically impossible. To address this fundamental limitation, both ECMWF and the U.S. National Centers for Environmental Prediction introduced probabilistic ensemble forecasting in 1992, running multiple simulations from slightly different starting conditions to generate probability distributions rather than single forecasts.`,
+  comprehensionQuestions: [
+    {
+      question: "Charney and von Neumann's key insight for making numerical forecasting work was:",
+      options: [
+        "The observational network needed to be much denser",
+        "Electronic computers were not yet fast enough and needed improvement",
+        "High-frequency oscillations in the equations needed to be filtered out first",
+        "Richardson's original equations contained fundamental mathematical errors",
+      ],
+      correctIndex: 2,
+    },
+    {
+      question: "The first successful numerical weather forecasts produced on ENIAC were published in:",
+      options: [
+        "Nature",
+        "The Journal of Meteorology",
+        "Tellus",
+        "The Meteorological Magazine",
+      ],
+      correctIndex: 2,
+    },
+    {
+      question: "ECMWF was established specifically to:",
+      options: [
+        "Coordinate weather observations across Europe",
+        "Extend skillful forecasting beyond the two-day horizon",
+        "Develop ensemble forecasting methods",
+        "Create shared computing infrastructure for national weather services",
+      ],
+      correctIndex: 1,
+    },
+    {
+      question: "Ensemble forecasting was introduced to address which fundamental problem?",
+      options: [
+        "The limited computing speed of weather prediction models",
+        "The inability to observe the upper atmosphere",
+        "Small measurement uncertainties that grow unpredictably over time",
+        "The high cost of running global atmospheric models",
       ],
       correctIndex: 2,
     },
@@ -335,18 +327,18 @@ export class StudyTaskGenerator {
 
     // 4-condition Latin square — counterbalances interface order and task-pair
     // assignment:
-    //  conditionIdx 0 → Block1=Chat+[Norman,Feria],   Block2=Direct+[Franches,Winter]
-    //  conditionIdx 1 → Block1=Direct+[Norman,Feria], Block2=Chat+[Franches,Winter]
-    //  conditionIdx 2 → Block1=Chat+[Franches,Winter], Block2=Direct+[Norman,Feria]
-    //  conditionIdx 3 → Block1=Direct+[Franches,Winter], Block2=Chat+[Norman,Feria]
+    //  conditionIdx 0 → Block1=Chat+[T1a,T2a],   Block2=Direct+[T1b,T2b]
+    //  conditionIdx 1 → Block1=Direct+[T1a,T2a], Block2=Chat+[T1b,T2b]
+    //  conditionIdx 2 → Block1=Chat+[T1b,T2b],   Block2=Direct+[T1a,T2a]
+    //  conditionIdx 3 → Block1=Direct+[T1b,T2b], Block2=Chat+[T1a,T2a]
     const conditionIdx = participantId % 4;
 
     const block1IsDirect = conditionIdx === 1 || conditionIdx === 3;
     const block2IsDirect = !block1IsDirect;
 
-    // Pair A = [Norman (short), Feria (long)], Pair B = [Franches (short), Winter (long)]
-    const pairA: [StudyTask, StudyTask] = [TASK_NORMAN, TASK_FERIA];
-    const pairB: [StudyTask, StudyTask] = [TASK_FRANCHES, TASK_WINTER];
+    // Pair A = [T1a, T2a], Pair B = [T1b, T2b]
+    const pairA: [StudyTask, StudyTask] = [TASK_T1A, TASK_T2A];
+    const pairB: [StudyTask, StudyTask] = [TASK_T1B, TASK_T2B];
 
     const block1Tasks = (conditionIdx === 0 || conditionIdx === 1) ? pairA : pairB;
     const block2Tasks = block1Tasks === pairA ? pairB : pairA;
@@ -359,12 +351,12 @@ export class StudyTaskGenerator {
         'Welcome, and thank you for participating in this study. ' +
         'The session will be recorded (audio and screen). Please do not use any external resources during the tasks.<br><br>' +
         '<b>Your task (repeated for four texts):</b><br><br>' +
-        'You are provided with a source document and an AI-generated summary. ' +
-        'The summary contains hallucinations — subtly incorrect factual claims. ' +
-        'Your task is to find and correct them by checking the summary against the source document. ' +
-        'You will be asked at the end of each task how many hallucinations you encountered.<br><br>' +
+        'You are provided with a source document and an AI-generated draft summary. ' +
+        'Your colleagues will rely on this summary instead of reading the source. ' +
+        'Please prepare it so that it\'s accurate, clearly written, well-structured, and ready to share. ' +
+        'Feel free to reorganise, rewrite, condense, or expand any part of it.<br><br>' +
         'You may use the interface on the right in whatever way feels most natural. ' +
-        'Try to identify and correct as many hallucinations as possible within the time limit.<br><br>' +
+        'You have up to 5 minutes per text, but you may finish whenever you feel the summary is ready.<br><br>' +
         'You will complete this task four times: two texts with one interface, then two texts with a different interface.<br><br>' +
         'After clicking Next, you will be asked to grant microphone and screen-sharing permissions. ' +
         'These are needed only once for the entire session.<br><br>' +
@@ -450,9 +442,10 @@ export class StudyTaskGenerator {
       message:
         '<b>Debrief</b><br><br>' +
         'Thank you for completing the study.<br><br>' +
-        'This study investigated how interface paradigm influences the way people detect and correct hallucinations in AI-generated content. ' +
-        'Each summary you worked with contained a fixed number of deliberate factual errors; ' +
-        'we were interested in how the interface affected your ability to identify and correct them, not in whether you found all of them.<br><br>' +
+        'This study investigated how interface paradigm influences the way people verify and edit AI-generated content, ' +
+        'including their tendency to check claims, modify drafts, and interact with source material. ' +
+        'The initial draft summaries you worked with contained several inaccuracies; ' +
+        'we were interested in how naturally you chose to verify or correct them, not in whether you found all of them.<br><br>' +
         'Your data will be kept confidential and used solely for research purposes. ' +
         'You may withdraw your data within two weeks by contacting the experimenter.<br><br>' +
         'Please feel free to ask any questions.',
