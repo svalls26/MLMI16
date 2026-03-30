@@ -25,6 +25,7 @@ export interface StudyStep {
   isDirect?: boolean;
   saveData?: boolean;
   questionnaireInterfaceOrder?: ['direct' | 'chat', 'direct' | 'chat'];
+  questionnaireSingleInterface?: 'direct' | 'chat';
   warmupImage?: string;
   warmupDurationSeconds?: number;
 }
@@ -346,6 +347,12 @@ export class StudyTaskGenerator {
       isDirect: block1IsDirect,
     });
 
+    // Block 1 — per-interface cognitive effort questionnaire
+    steps.push({
+      type: 'questionnaire',
+      questionnaireSingleInterface: block1IsDirect ? 'direct' : 'chat',
+    });
+
     // Between blocks
     steps.push({
       type: 'message',
@@ -383,13 +390,10 @@ export class StudyTaskGenerator {
       saveData: true,
     });
 
-    // Stage — Cognitive Effort Questionnaire
-    const questionnaireOrder: ['direct' | 'chat', 'direct' | 'chat'] =
-      participantId % 2 === 0 ? ['direct', 'chat'] : ['chat', 'direct'];
-
+    // Block 2 — per-interface cognitive effort questionnaire
     steps.push({
       type: 'questionnaire',
-      questionnaireInterfaceOrder: questionnaireOrder,
+      questionnaireSingleInterface: block2IsDirect ? 'direct' : 'chat',
     });
 
     // Stage — Debrief

@@ -309,6 +309,9 @@ export default function StudyInterface() {
       return <StudyVideo video={currentStep.video || ""} />;
 
     } else if (currentStep.type === 'questionnaire') {
+      if (currentStep.questionnaireSingleInterface) {
+        return <CognitiveEffortQuestionnaire singleInterface={currentStep.questionnaireSingleInterface} />;
+      }
       const order = currentStep.questionnaireInterfaceOrder || ['direct', 'chat'];
       return <CognitiveEffortQuestionnaire interfaceOrder={order} />;
 
