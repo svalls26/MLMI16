@@ -35,8 +35,8 @@ export interface QuizRecord {
 }
 
 export interface QuestionnaireRecord {
-  direct: { mentalEffort: number; reliance: number; sourceEngagement: number };
-  chat: { mentalEffort: number; reliance: number; sourceEngagement: number };
+  direct?: { mentalEffort: number; reliance: number; sourceEngagement: number };
+  chat?: { mentalEffort: number; reliance: number; sourceEngagement: number };
   submittedAt: number;
 }
 
@@ -119,7 +119,7 @@ interface StudyModelActions {
 
   // ── Structured data ──
   addQuizResult: (record: Omit<QuizRecord, 'stepId' | 'taskId' | 'taskCode' | 'condition'>) => void;
-  setQuestionnaireData: (data: QuestionnaireRecord) => void;
+  setQuestionnaireData: (data: Partial<Omit<QuestionnaireRecord, 'submittedAt'>>) => void;
 
   // ── Manipulative behavior counters ──
   incrementTextSelections: () => void;
@@ -341,8 +341,14 @@ export const useStudyModelStore = create<StudyModelState & StudyModelActions>()(
     set((state) => ({ quizResults: [...state.quizResults, record] }));
   },
 
-  setQuestionnaireData(data: QuestionnaireRecord) {
-    set({ questionnaireData: data });
+  setQuestionnaireData(data: Partial<Omit<QuestionnaireRecord, 'submittedAt'>>) {
+    set((state) => ({
+      questionnaireData: {
+        ...(state.questionnaireData ?? {}),
+        ...data,
+        submittedAt: Date.now(),
+      },
+    }));
   },
 
   // ── Manipulative behavior counters ─────────────────────────────────────

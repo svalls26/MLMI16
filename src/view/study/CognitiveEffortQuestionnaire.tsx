@@ -68,8 +68,10 @@ function InterfaceBlock({
 
 export default function CognitiveEffortQuestionnaire({
   interfaceOrder,
+  singleInterface,
 }: {
-  interfaceOrder: ['direct' | 'chat', 'direct' | 'chat'];
+  interfaceOrder?: ['direct' | 'chat', 'direct' | 'chat'];
+  singleInterface?: 'direct' | 'chat';
 }) {
   const nextStep = useStudyModelStore((state) => state.nextStep);
   const logEvent = useStudyModelStore((state) => state.logEvent);
@@ -78,47 +80,70 @@ export default function CognitiveEffortQuestionnaire({
   const [directRatings, setDirectRatings] = useState<InterfaceRatings>({});
   const [chatRatings, setChatRatings] = useState<InterfaceRatings>({});
 
-  const allFilled =
-    ITEMS.every((item) => directRatings[item.key] !== undefined) &&
-    ITEMS.every((item) => chatRatings[item.key] !== undefined);
+  const activeRatings = singleInterface === 'direct' ? directRatings : chatRatings;
+  const allFilled = singleInterface
+    ? ITEMS.every((item) => activeRatings[item.key] !== undefined)
+    : ITEMS.every((item) => directRatings[item.key] !== undefined) &&
+      ITEMS.every((item) => chatRatings[item.key] !== undefined);
 
   const handleSubmit = () => {
-    const record: QuestionnaireRecord = {
-      direct: {
-        mentalEffort: directRatings['mentalEffort'],
-        reliance: directRatings['reliance'],
-        sourceEngagement: directRatings['sourceEngagement'],
-      },
-      chat: {
-        mentalEffort: chatRatings['mentalEffort'],
-        reliance: chatRatings['reliance'],
-        sourceEngagement: chatRatings['sourceEngagement'],
-      },
-      submittedAt: Date.now(),
-    };
-
-    // Persist for ZIP export
-    setQuestionnaireData(record);
-    // Keep the existing CSV log
-    logEvent('QUESTIONNAIRE_SUBMITTED', { directRatings, chatRatings });
+    if (singleInterface) {
+      const ratings = singleInterface === 'direct' ? directRatings : chatRatings;
+      setQuestionnaireData({
+        [singleInterface]: {
+          mentalEffort: ratings['mentalEffort'],
+          reliance: ratings['reliance'],
+          sourceEngagement: ratings['sourceEngagement'],
+        },
+      });
+      logEvent('QUESTIONNAIRE_SUBMITTED', { interface: singleInterface, ratings });
+    } else {
+      setQuestionnaireData({
+        direct: {
+          mentalEffort: directRatings['mentalEffort'],
+          reliance: directRatings['reliance'],
+          sourceEngagement: directRatings['sourceEngagement'],
+        },
+        chat: {
+          mentalEffort: chatRatings['mentalEffort'],
+          reliance: chatRatings['reliance'],
+          sourceEngagement: chatRatings['sourceEngagement'],
+        },
+      });
+      logEvent('QUESTIONNAIRE_SUBMITTED', { directRatings, chatRatings });
+    }
     nextStep();
   };
 
-  const blocks = interfaceOrder.map((iface) =>
-    iface === 'direct'
-      ? {
-          interfaceName: 'direct',
-          displayName: 'DirectGPT interface',
-          ratings: directRatings,
-          onChange: (key: string, val: number) => setDirectRatings((r) => ({ ...r, [key]: val })),
-        }
-      : {
-          interfaceName: 'chat',
-          displayName: 'ChatGPT interface',
-          ratings: chatRatings,
-          onChange: (key: string, val: number) => setChatRatings((r) => ({ ...r, [key]: val })),
-        }
-  );
+  const blocks = singleInterface
+    ? [singleInterface === 'direct'
+        ? {
+            interfaceName: 'direct',
+            displayName: 'DirectGPT interface',
+            ratings: directRatings,
+            onChange: (key: string, val: number) => setDirectRatings((r) => ({ ...r, [key]: val })),
+          }
+        : {
+            interfaceName: 'chat',
+            displayName: 'ChatGPT interface',
+            ratings: chatRatings,
+            onChange: (key: string, val: number) => setChatRatings((r) => ({ ...r, [key]: val })),
+          }]
+    : (interfaceOrder ?? (['direct', 'chat'] as const)).map((iface) =>
+        iface === 'direct'
+          ? {
+              interfaceName: 'direct',
+              displayName: 'DirectGPT interface',
+              ratings: directRatings,
+              onChange: (key: string, val: number) => setDirectRatings((r) => ({ ...r, [key]: val })),
+            }
+          : {
+              interfaceName: 'chat',
+              displayName: 'ChatGPT interface',
+              ratings: chatRatings,
+              onChange: (key: string, val: number) => setChatRatings((r) => ({ ...r, [key]: val })),
+            }
+      );
 
   return (
     <div style={{
@@ -128,10 +153,10 @@ export default function CognitiveEffortQuestionnaire({
       padding: '40px 20px', boxSizing: 'border-box',
     }}>
       <div style={{ maxWidth: 720, width: '100%', background: 'white', borderRadius: 8, padding: 32, boxShadow: '0 2px 16px rgba(0,0,0,0.1)' }}>
-        <h2 style={{ marginTop: 0 }}>Stage 6 — Cognitive Effort Questionnaire</h2>
+        <h2 style={{ marginTop: 0 }}>Cognitive Effort Questionnaire</h2>
         <p style={{ color: '#555' }}>
-          Please rate each interface on the following items using a scale from 1 (very low) to 7 (very high).
-          Reflect on your experience across both tasks completed with each interface.
+          Please rate the interface you just used on the following items using a scale from 1 (very low) to 7 (very high).
+          Reflect on your experience across the two tasks you completed with this interface.
         </p>
 
         {blocks.map((b) => (
