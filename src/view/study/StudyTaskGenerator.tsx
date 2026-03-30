@@ -306,14 +306,14 @@ export class StudyTaskGenerator {
       message:
         '<b>Briefing and Consent</b><br><br>' +
         'Welcome, and thank you for participating in this study. ' +
-        'The session will be recorded (audio and screen). Please do not use any external resources during the tasks.<br><br>' +
+        'Please do not use any external resources during the tasks.<br><br>' +
         '<b>Your task (repeated for four texts):</b><br><br>' +
         'You are provided with a source document and an AI-generated draft summary. ' +
         'Your colleagues will rely on this summary instead of reading the source. ' +
         'Please prepare it so that it\'s accurate, clearly written, well-structured, and ready to share. ' +
         'Feel free to reorganise, rewrite, condense, or expand any part of it.<br><br>' +
         'You may use the interface on the right in whatever way feels most natural. ' +
-        'You have up to 5 minutes per text, but you may finish whenever you feel the summary is ready.<br><br>' +
+        'You have up to 6 minutes per text, but you may finish whenever you feel the summary is ready.<br><br>' +
         'You will complete this task four times: two texts with one interface, then two texts with a different interface.<br><br>' +
         'After clicking Next, you will be asked to grant microphone and screen-sharing permissions. ' +
         'These are needed only once for the entire session.<br><br>' +
