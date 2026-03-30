@@ -1,11 +1,13 @@
-# DirectGPT
-### A user interface layer on top of ChatGPT that transforms direct manipulation actions to engineered prompts
+# DirectGPT — MLMI16 Extension
+### Extended for an MLMI16 study on AI hallucination detection across interface paradigms
+
+This repository is an extension of the original [DirectGPT](https://github.com/damienmasson/DirectGPT) project (CHI'24). It adapts the system to run a controlled study in which participants detect and correct hallucinations in AI-generated summaries, comparing a direct manipulation interface against a standard chat interface.
+
 <img src="demo.gif" height="350">
 
+For details on the original system, see the [accompanying paper](https://arxiv.org/abs/2310.03691).
 
-__DirectGPT__ is a system that exemplifies how direct manipulation can be used to interact with large language models. The system includes a continuous representation of generated objects of interest; reuse of prompt syntax in a toolbar of commands; manipulable outputs to compose or control the effect of prompts; and undo mechanisms. For more details, see the [accompanying paper](https://arxiv.org/abs/2310.03691).
-
-### [Online Demo](https://damienmasson.com/DirectGPT) / [How to build](#how-to-build-and-run) / [Publication (CHI'24)](#publication)
+### [How to build](#how-to-build-and-run) / [Original publication (CHI'24)](#publication)
 
 ## How to build and run
 The tool was created using TypeScript and React. To run it, you can use npm.
